@@ -183,7 +183,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/campaigns", upload.single('contactsFile'), async (req, res) => {
     try {
-      const validation = insertCampaignSchema.safeParse(req.body);
+      // Convert messageInterval to number before validation
+      const processedBody = {
+        ...req.body,
+        messageInterval: parseInt(req.body.messageInterval) || 5
+      };
+      
+      const validation = insertCampaignSchema.safeParse(processedBody);
       if (!validation.success) {
         return res.status(400).json({ 
           message: fromZodError(validation.error).toString()

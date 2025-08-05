@@ -8,6 +8,15 @@ This is a full-stack WhatsApp automation application that enables users to creat
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (August 2025)
+
+- **Migration Complete**: Successfully migrated project from Replit Agent to Replit environment
+- **Excel Processing Update**: Modified to read company names from column B and phone numbers from column F (specific column positions)
+- **Phone Number Handling**: Enhanced Brazilian phone number cleaning to handle formats like "(11) 99761-3946"
+- **Save Draft Feature**: Fixed save draft button functionality with proper validation
+- **UI Simplification**: Hidden message interval and scheduling options (defaults: 5 seconds between messages, immediate sending)
+- **Backend Fixes**: Resolved string-to-number conversion issues for messageInterval field
+
 ## System Architecture
 
 ### Frontend Architecture

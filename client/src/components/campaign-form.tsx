@@ -48,7 +48,7 @@ export function CampaignForm() {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('message', data.message);
-      formData.append('messageInterval', data.messageInterval.toString());
+      formData.append('messageInterval', '5');
       formData.append('scheduleType', data.scheduleType);
       formData.append('status', data.status || 'draft');
       

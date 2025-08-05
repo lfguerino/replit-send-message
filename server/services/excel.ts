@@ -140,18 +140,23 @@ export class ExcelService {
   }
 
   private static cleanPhoneNumber(phone: string): string {
-    // Remove all non-numeric characters except +
-    let cleaned = phone.replace(/[^\d+]/g, '');
+    // Remove all non-numeric characters (parentheses, spaces, dashes, etc.)
+    let cleaned = phone.replace(/[^\d]/g, '');
     
-    // Remove + if present
-    cleaned = cleaned.replace(/^\+/, '');
+    // Handle Brazilian phone format like (11) 99761-3946
+    // Should result in: 5511997613946
     
-    // Remove country code if present and add it back
-    if (cleaned.startsWith('55') && cleaned.length > 11) {
-      cleaned = cleaned.substring(2);
+    // If it starts with 0, remove it (some Brazilian numbers have leading 0)
+    if (cleaned.startsWith('0')) {
+      cleaned = cleaned.substring(1);
     }
     
-    // Add Brazil country code
+    // If it already has country code 55, keep as is
+    if (cleaned.startsWith('55') && cleaned.length >= 12) {
+      return cleaned;
+    }
+    
+    // Add Brazil country code if it's a valid Brazilian number
     if (cleaned.length === 10 || cleaned.length === 11) {
       cleaned = '55' + cleaned;
     }
@@ -161,8 +166,8 @@ export class ExcelService {
 
   private static isValidPhoneNumber(phone: string): boolean {
     // Brazilian phone number validation
-    // Should have 13 digits (55 + area code + number)
-    if (phone.length !== 13) return false;
+    // Should have 12 or 13 digits (55 + area code + number)
+    if (phone.length < 12 || phone.length > 13) return false;
     
     // Should start with 55 (Brazil)
     if (!phone.startsWith('55')) return false;
@@ -171,6 +176,10 @@ export class ExcelService {
     const areaCode = phone.substring(2, 4);
     const areaCodeNum = parseInt(areaCode);
     if (areaCodeNum < 11 || areaCodeNum > 99) return false;
+    
+    // The remaining digits should be the phone number (8 or 9 digits)
+    const phoneNumber = phone.substring(4);
+    if (phoneNumber.length < 8 || phoneNumber.length > 9) return false;
     
     return true;
   }
