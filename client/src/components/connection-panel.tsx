@@ -155,7 +155,7 @@ export function ConnectionPanel() {
 
         {/* Connection Actions */}
         <div className="space-y-3">
-          {status?.isConnected ? (
+          {(status?.isConnected || status?.session?.status === 'connected') ? (
             <Button
               className="w-full bg-red-500 hover:bg-red-600 text-white"
               onClick={() => disconnectMutation.mutate()}
@@ -166,7 +166,8 @@ export function ConnectionPanel() {
             </Button>
           ) : (
             <Button
-              className="w-full bg-whatsapp hover:bg-whatsapp-dark text-white"
+              className="w-full text-white"
+              style={{ backgroundColor: 'hsl(140, 69%, 58%)' }}
               onClick={() => connectMutation.mutate()}
               disabled={connectMutation.isPending}
             >
