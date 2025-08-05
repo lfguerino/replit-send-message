@@ -51,6 +51,9 @@ export class MemStorage implements IStorage {
     const session: WhatsappSession = {
       ...insertSession,
       id,
+      status: insertSession.status || 'disconnected',
+      deviceName: insertSession.deviceName || null,
+      lastActivity: insertSession.lastActivity || null,
       createdAt: new Date(),
     };
     this.whatsappSessions.set(id, session);
@@ -80,6 +83,9 @@ export class MemStorage implements IStorage {
     const campaign: Campaign = {
       ...insertCampaign,
       id,
+      status: insertCampaign.status || 'draft',
+      messageInterval: insertCampaign.messageInterval || 3,
+      scheduledAt: insertCampaign.scheduledAt || null,
       totalContacts: 0,
       sentCount: 0,
       deliveredCount: 0,
@@ -122,6 +128,11 @@ export class MemStorage implements IStorage {
     const contact: Contact = {
       ...insertContact,
       id,
+      status: insertContact.status || 'pending',
+      customFields: insertContact.customFields || null,
+      sentAt: null,
+      deliveredAt: null,
+      errorMessage: null,
     };
     this.contacts.set(id, contact);
     return contact;
@@ -157,6 +168,7 @@ export class MemStorage implements IStorage {
     const log: ActivityLog = {
       ...insertLog,
       id,
+      metadata: insertLog.metadata || null,
       createdAt: new Date(),
     };
     this.activityLogs.unshift(log); // Add to beginning for newest first

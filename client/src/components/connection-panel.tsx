@@ -10,7 +10,19 @@ import { useToast } from "@/hooks/use-toast";
 export function ConnectionPanel() {
   const { toast } = useToast();
 
-  const { data: status, isLoading } = useQuery({
+  const { data: status, isLoading } = useQuery<{
+    isConnected: boolean;
+    sessionName: string;
+    deviceName?: string;
+    session?: {
+      id: string;
+      sessionName: string;
+      status: string;
+      deviceName: string | null;
+      lastActivity: string | null;
+      createdAt: string | null;
+    } | null;
+  }>({
     queryKey: ["/api/whatsapp/status"],
     refetchInterval: 5000, // Refresh every 5 seconds
   });

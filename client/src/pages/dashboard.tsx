@@ -13,7 +13,12 @@ import { MessageSquare, Plus } from "lucide-react";
 export default function Dashboard() {
   const { isConnected, whatsappStatus } = useWebSocket();
 
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<{
+    activeCampaigns: number;
+    messagesSent: number;
+    deliveryRate: string;
+    contactsImported: number;
+  }>({
     queryKey: ["/api/stats"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });

@@ -17,7 +17,7 @@ import { z } from "zod";
 const campaignSchema = z.object({
   name: z.string().min(1, "Nome da campanha é obrigatório"),
   message: z.string().min(1, "Mensagem é obrigatória"),
-  messageInterval: z.string().transform(Number),
+  messageInterval: z.number(),
   scheduleType: z.string(),
   scheduledAt: z.string().optional(),
 });
@@ -35,7 +35,7 @@ export function CampaignForm() {
     defaultValues: {
       name: "",
       message: "",
-      messageInterval: "3",
+      messageInterval: 3,
       scheduleType: "now",
     },
   });
@@ -261,7 +261,7 @@ export function CampaignForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Intervalo entre Mensagens</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o intervalo" />

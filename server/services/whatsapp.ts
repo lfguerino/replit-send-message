@@ -1,4 +1,4 @@
-import { create, Client } from '@wppconnect-team/wppconnect';
+import { create, Whatsapp } from '@wppconnect-team/wppconnect';
 import { EventEmitter } from 'events';
 
 export interface WhatsappMessage {
@@ -14,7 +14,7 @@ export interface WhatsappStatus {
 }
 
 export class WhatsappService extends EventEmitter {
-  private client: Client | null = null;
+  private client: Whatsapp | null = null;
   private sessionName: string;
   private isConnecting: boolean = false;
 
@@ -32,33 +32,37 @@ export class WhatsappService extends EventEmitter {
     this.emit('status', { status: 'connecting', sessionName: this.sessionName });
 
     try {
-      this.client = await create({
-        session: this.sessionName,
-        headless: true,
-        devtools: false,
-        useChrome: true,
-        debug: false,
-        logQR: false,
-        browserWS: '',
-        browserArgs: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu'
-        ],
-        onQrcode: (base64Qr: string, asciiQR: string) => {
+      this.client = await create(
+        this.sessionName,
+        (base64Qr: string, asciiQR: string) => {
           console.log('QR Code generated');
           this.emit('qrcode', { base64: base64Qr, ascii: asciiQR });
         },
-        onStatusFind: (statusSession: string, session: string) => {
+        (statusSession: string, session: string) => {
           console.log('Status Session:', statusSession, 'Session:', session);
           this.emit('status', { status: statusSession, sessionName: session });
         },
-      });
+        undefined, // onLoadingScreen
+        undefined, // catchLinkCode
+        {
+          headless: true,
+          devtools: false,
+          useChrome: true,
+          debug: false,
+          logQR: false,
+          browserWS: '',
+          browserArgs: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+          ],
+        }
+      );
 
       if (this.client) {
         await this.setupEventListeners();
