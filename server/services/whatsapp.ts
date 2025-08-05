@@ -51,6 +51,7 @@ export class WhatsappService extends EventEmitter {
           debug: false,
           logQR: false,
           browserWS: '',
+
           browserArgs: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -59,7 +60,10 @@ export class WhatsappService extends EventEmitter {
             '--no-first-run',
             '--no-zygote',
             '--single-process',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding'
           ],
         }
       );
@@ -100,13 +104,14 @@ export class WhatsappService extends EventEmitter {
     try {
       // Format phone number (remove special characters and add country code if needed)
       const formattedNumber = this.formatPhoneNumber(to);
+      console.log(`Sending message to: ${to} -> ${formattedNumber}`);
       
       await this.client.sendText(formattedNumber, message);
-      this.emit('messageSent', { to: formattedNumber, message });
+      this.emit('messageSent', { to: to, formattedNumber: formattedNumber, message });
       
       return { success: true };
     } catch (error: any) {
-      console.error('Error sending message:', error);
+      console.error(`Error sending message to ${to} (formatted: ${this.formatPhoneNumber(to)}):`, error);
       this.emit('messageError', { to, message, error: error.message });
       return { success: false, error: error.message };
     }
@@ -116,9 +121,25 @@ export class WhatsappService extends EventEmitter {
     // Remove all non-numeric characters
     let cleaned = phone.replace(/\D/g, '');
     
-    // Add country code if not present (assuming Brazil +55)
-    if (cleaned.length === 11 && !cleaned.startsWith('55')) {
+    // If it starts with 0, remove it (some Brazilian numbers have leading 0)
+    if (cleaned.startsWith('0')) {
+      cleaned = cleaned.substring(1);
+    }
+    
+    // If it already has country code 55, keep as is
+    if (cleaned.startsWith('55') && cleaned.length >= 12) {
+      // Already formatted correctly
+    } else if (cleaned.length === 10 || cleaned.length === 11) {
+      // Add Brazil country code for valid Brazilian numbers
       cleaned = '55' + cleaned;
+    } else if (cleaned.length === 8 || cleaned.length === 9) {
+      // Probably missing area code, this will fail validation
+      console.warn(`Phone number seems incomplete: ${phone} -> ${cleaned}`);
+    }
+    
+    // Validate the final format
+    if (cleaned.length < 12 || cleaned.length > 13 || !cleaned.startsWith('55')) {
+      console.warn(`Invalid phone number format: ${phone} -> ${cleaned}`);
     }
     
     // Ensure it ends with @c.us for WhatsApp

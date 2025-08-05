@@ -5,8 +5,11 @@ import multer from "multer";
 import { storage } from "./storage";
 import { whatsappService } from "./services/whatsapp";
 import { ExcelService } from "./services/excel";
-import { insertCampaignSchema, insertContactSchema, insertActivityLogSchema } from "@shared/schema";
+import { insertCampaignSchema, insertContactSchema, insertActivityLogSchema, insertUserSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import session from "express-session";
+import bcrypt from "bcryptjs";
+import { requireAuth, attachUser, type AuthRequest } from "./middleware/auth";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -18,6 +21,94 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+
+  // Session configuration
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  }));
+
+  // Attach user to all requests
+  app.use(attachUser);
+
+  // Authentication routes
+  app.post("/api/auth/login", async (req: AuthRequest, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Usuário ou senha incorretos" });
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Usuário ou senha incorretos" });
+      }
+
+      req.session.userId = user.id;
+      res.json({ message: "Login realizado com sucesso" });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/auth/first-access", async (req: AuthRequest, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Check if any user exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Usuário já existe" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await storage.createUser({
+        username,
+        password: hashedPassword,
+        isActive: true,
+      });
+
+      res.json({ message: "Usuário criado com sucesso" });
+    } catch (error) {
+      console.error("First access error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/auth/me", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Remove password from response
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: AuthRequest, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Erro ao fazer logout" });
+      }
+      res.json({ message: "Logout realizado com sucesso" });
+    });
+  });
 
   // WebSocket server for real-time updates
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
@@ -80,24 +171,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   whatsappService.on('messageSent', async (data) => {
     broadcast({ type: 'message_sent', data });
+    
+    // Get contact name from the phone number
+    const phoneNumber = data.to;
+    const contacts = await storage.getAllContacts();
+    const contact = contacts.find(c => c.phone === phoneNumber);
+    const contactName = contact ? contact.name : 'Contato';
+    
+    // Clean phone number (remove @c.us)
+    const cleanNumber = data.formattedNumber?.replace('@c.us', '') || phoneNumber;
+    
     await storage.createActivityLog({
       type: 'message_sent',
-      message: `Mensagem enviada para ${data.to}`,
+      message: `Mensagem enviada para ${contactName} (${cleanNumber})`,
       metadata: data
     });
   });
 
   whatsappService.on('messageError', async (data) => {
     broadcast({ type: 'message_error', data });
+    
+    // Get contact name from the phone number
+    const phoneNumber = data.to;
+    const contacts = await storage.getAllContacts();
+    const contact = contacts.find(c => c.phone === phoneNumber);
+    const contactName = contact ? contact.name : 'Contato';
+    
+    // Clean phone number (remove @c.us)
+    const cleanNumber = phoneNumber.replace('@c.us', '');
+    
     await storage.createActivityLog({
       type: 'message_failed',
-      message: `Erro ao enviar mensagem para ${data.to}: ${data.error}`,
+      message: `Erro ao enviar mensagem para ${contactName} (${cleanNumber}): ${data.error}`,
       metadata: data
     });
   });
 
-  // WhatsApp Connection Routes
-  app.get("/api/whatsapp/status", async (req, res) => {
+  // Create default user if none exists
+  async function createDefaultUser() {
+    try {
+      const existingUser = await storage.getUserByUsername("admin");
+      if (!existingUser) {
+        const hashedPassword = await bcrypt.hash("admin123", 10);
+        await storage.createUser({
+          username: "admin",
+          password: hashedPassword,
+          email: "admin@whatsapp-campaign.com",
+          isActive: true,
+        });
+        console.log("Default user created: admin/admin123");
+      }
+    } catch (error) {
+      console.error("Error creating default user:", error);
+    }
+  }
+
+  // Create default user on startup
+  await createDefaultUser();
+
+  // WhatsApp Connection Routes (Protected)
+  app.get("/api/whatsapp/status", requireAuth, async (req: AuthRequest, res) => {
     try {
       const status = await whatsappService.getStatus();
       const session = await storage.getWhatsappSession('session_001');
@@ -111,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/whatsapp/connect", async (req, res) => {
+  app.post("/api/whatsapp/connect", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (whatsappService.isConnected()) {
         return res.status(400).json({ message: "WhatsApp já está conectado" });
@@ -139,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/whatsapp/disconnect", async (req, res) => {
+  app.post("/api/whatsapp/disconnect", requireAuth, async (req: AuthRequest, res) => {
     try {
       await whatsappService.disconnect();
       await storage.updateWhatsappSession('session_001', {
@@ -152,8 +285,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Campaign Routes
-  app.get("/api/campaigns", async (req, res) => {
+  // Campaign Routes (Protected)
+  app.get("/api/campaigns", requireAuth, async (req: AuthRequest, res) => {
     try {
       const campaigns = await storage.getAllCampaigns();
       res.json(campaigns);
@@ -162,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/campaigns/active", async (req, res) => {
+  app.get("/api/campaigns/active", requireAuth, async (req: AuthRequest, res) => {
     try {
       // Get all campaigns (including drafts) to display in the dashboard
       const campaigns = await storage.getAllCampaigns();
@@ -182,8 +315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all contacts with campaign information
-  app.get("/api/contacts", async (req, res) => {
+  // Get all contacts with campaign information (Protected)
+  app.get("/api/contacts", requireAuth, async (req: AuthRequest, res) => {
     try {
       const campaigns = await storage.getAllCampaigns();
       const allContacts = [];
@@ -204,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/campaigns", upload.single('contactsFile'), async (req, res) => {
+  app.post("/api/campaigns", requireAuth, upload.single('contactsFile'), async (req: AuthRequest, res) => {
     try {
       // Convert messageInterval to number before validation
       const processedBody = {
@@ -446,9 +579,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message = message.replace(/{telefone}/g, contact.phone);
         
         if (contact.customFields) {
-          Object.entries(contact.customFields).forEach(([key, value]) => {
-            message = message.replace(new RegExp(`{${key}}`, 'g'), String(value));
-          });
+          try {
+            // Parse custom fields if it's a string (from database)
+            const customFields = typeof contact.customFields === 'string' 
+              ? JSON.parse(contact.customFields) 
+              : contact.customFields;
+            
+            Object.entries(customFields).forEach(([key, value]) => {
+              message = message.replace(new RegExp(`{${key}}`, 'g'), String(value));
+            });
+          } catch (error) {
+            console.warn('Error parsing custom fields for contact:', contact.id, error);
+          }
         }
 
         // Send message

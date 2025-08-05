@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["sqlite"]
+packages = ["sqlite", "glib", "nss", "nspr", "atk", "libdrm", "alsa-lib", "gtk3", "gdk-pixbuf", "chromium"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -37,3 +37,6 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[agent]
+integrations = ["javascript_log_in_with_replit==1.0.0", "javascript_database==1.0.0"]

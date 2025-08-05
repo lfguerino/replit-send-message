@@ -1,7 +1,13 @@
-import { type WhatsappSession, type InsertWhatsappSession, type Campaign, type InsertCampaign, type Contact, type InsertContact, type ActivityLog, type InsertActivityLog } from "@shared/schema";
+import { type User, type InsertUser, type WhatsappSession, type InsertWhatsappSession, type Campaign, type InsertCampaign, type Contact, type InsertContact, type ActivityLog, type InsertActivityLog } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
+  // Users
+  getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+
   // WhatsApp Sessions
   getWhatsappSession(sessionName: string): Promise<WhatsappSession | undefined>;
   createWhatsappSession(session: InsertWhatsappSession): Promise<WhatsappSession>;
@@ -20,6 +26,7 @@ export interface IStorage {
   createContact(contact: InsertContact): Promise<Contact>;
   updateContact(id: string, updates: Partial<Contact>): Promise<Contact | undefined>;
   getContactsByCampaign(campaignId: string): Promise<Contact[]>;
+  getAllContacts(): Promise<Contact[]>;
   createMultipleContacts(contacts: InsertContact[]): Promise<Contact[]>;
   deleteContact(id: string): Promise<void>;
   deleteContactsByCampaign(campaignId: string): Promise<void>;
@@ -34,16 +41,49 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, User>;
   private whatsappSessions: Map<string, WhatsappSession>;
   private campaigns: Map<string, Campaign>;
   private contacts: Map<string, Contact>;
   private activityLogs: ActivityLog[];
 
   constructor() {
+    this.users = new Map();
     this.whatsappSessions = new Map();
     this.campaigns = new Map();
     this.contacts = new Map();
     this.activityLogs = [];
+  }
+
+  // Users
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.username === username);
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = randomUUID();
+    const user: User = {
+      ...insertUser,
+      id,
+      isActive: insertUser.isActive ?? true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    const updatedUser = { ...user, ...updates, updatedAt: new Date().toISOString() };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   // WhatsApp Sessions
@@ -59,7 +99,7 @@ export class MemStorage implements IStorage {
       status: insertSession.status || 'disconnected',
       deviceName: insertSession.deviceName || null,
       lastActivity: insertSession.lastActivity || null,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
     this.whatsappSessions.set(id, session);
     return session;
@@ -95,8 +135,8 @@ export class MemStorage implements IStorage {
       sentCount: 0,
       deliveredCount: 0,
       failedCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     this.campaigns.set(id, campaign);
     return campaign;
@@ -106,7 +146,7 @@ export class MemStorage implements IStorage {
     const campaign = this.campaigns.get(id);
     if (!campaign) return undefined;
 
-    const updatedCampaign = { ...campaign, ...updates, updatedAt: new Date() };
+    const updatedCampaign = { ...campaign, ...updates, updatedAt: new Date().toISOString() };
     this.campaigns.set(id, updatedCampaign);
     return updatedCampaign;
   }
@@ -158,6 +198,26 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getAllContacts(): Promise<Contact[]> {
+    return Array.from(this.contacts.values());
+  }
+
+  async deleteContact(id: string): Promise<void> {
+    this.contacts.delete(id);
+  }
+
+  async deleteContactsByCampaign(campaignId: string): Promise<void> {
+    for (const [id, contact] of this.contacts.entries()) {
+      if (contact.campaignId === campaignId) {
+        this.contacts.delete(id);
+      }
+    }
+  }
+
+  async deleteCampaign(id: string): Promise<void> {
+    this.campaigns.delete(id);
+  }
+
   async createMultipleContacts(insertContacts: InsertContact[]): Promise<Contact[]> {
     const contacts: Contact[] = [];
     for (const insertContact of insertContacts) {
@@ -174,7 +234,7 @@ export class MemStorage implements IStorage {
       ...insertLog,
       id,
       metadata: insertLog.metadata || null,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
     this.activityLogs.unshift(log); // Add to beginning for newest first
     

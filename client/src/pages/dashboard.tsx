@@ -7,12 +7,15 @@ import { ActivityLog } from "@/components/activity-log";
 import { StatsGrid } from "@/components/stats-grid";
 import { ContactsTable } from "@/components/contacts-table";
 import { useWebSocket } from "@/hooks/use-websocket";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Plus, Home, Plug, Megaphone, Users, BarChart } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MessageSquare, Plus, Home, Plug, Megaphone, Users, BarChart, LogOut, User } from "lucide-react";
 
 export default function Dashboard() {
   const { isConnected, whatsappStatus } = useWebSocket();
+  const { user, logout } = useAuth();
   const [activeSection, setActiveSection] = useState('dashboard');
 
   const { data: stats } = useQuery<{
@@ -149,6 +152,23 @@ export default function Dashboard() {
                     {whatsappStatus?.isConnected ? 'Conectado' : 'Desconectado'}
                   </span>
                 </div>
+                
+                {/* User Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">{user?.username || 'Usuário'}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => logout()}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
                 <Button className="bg-whatsapp hover:bg-whatsapp-dark text-white">
                   <Plus className="w-4 h-4 mr-2" />
                   Nova Campanha
@@ -166,14 +186,9 @@ export default function Dashboard() {
               <StatsGrid stats={stats} />
 
               {/* Main Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                {/* WhatsApp Connection Panel */}
-                <div className="lg:col-span-1">
-                  <ConnectionPanel />
-                </div>
-
+              <div className="grid grid-cols-1 gap-6 mt-8">
                 {/* Campaign Management */}
-                <div className="lg:col-span-2">
+                <div>
                   <CampaignForm />
                 </div>
               </div>

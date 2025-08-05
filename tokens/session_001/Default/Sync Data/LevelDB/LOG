@@ -1,3 +1,3 @@
-2025/08/05-14:27:18.903 4744 Reusing MANIFEST C:\Users\lfgue\Downloads\ChatBlast\ChatBlast\tokens\session_001\Default\Sync Data\LevelDB/MANIFEST-000001
-2025/08/05-14:27:18.908 4744 Recovering log #3
-2025/08/05-14:27:18.909 4744 Reusing old log C:\Users\lfgue\Downloads\ChatBlast\ChatBlast\tokens\session_001\Default\Sync Data\LevelDB/000003.log 
+2025/08/05-18:19:47.588 149f Reusing MANIFEST /home/runner/workspace/tokens/session_001/Default/Sync Data/LevelDB/MANIFEST-000001
+2025/08/05-18:19:47.588 149f Recovering log #3
+2025/08/05-18:19:47.589 149f Reusing old log /home/runner/workspace/tokens/session_001/Default/Sync Data/LevelDB/000003.log 

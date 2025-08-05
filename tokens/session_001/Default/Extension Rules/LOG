@@ -1,2 +1,3 @@
-2025/08/05-11:33:21.804 5838 Creating DB C:\Users\lfgue\Downloads\ChatBlast\ChatBlast\tokens\session_001\Default\Extension Rules since it was missing.
-2025/08/05-11:33:21.815 5838 Reusing MANIFEST C:\Users\lfgue\Downloads\ChatBlast\ChatBlast\tokens\session_001\Default\Extension Rules/MANIFEST-000001
+2025/08/05-18:19:47.604 149f Reusing MANIFEST /home/runner/workspace/tokens/session_001/Default/Extension Rules/MANIFEST-000001
+2025/08/05-18:19:47.605 149f Recovering log #3
+2025/08/05-18:19:47.605 149f Reusing old log /home/runner/workspace/tokens/session_001/Default/Extension Rules/000003.log 

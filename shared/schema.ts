@@ -3,6 +3,17 @@ import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Users table for authentication
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey().$default(() => crypto.randomUUID()),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  email: text("email"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").$default(() => new Date().toISOString()),
+  updatedAt: text("updated_at").$default(() => new Date().toISOString()),
+});
+
 export const whatsappSessions = sqliteTable("whatsapp_sessions", {
   id: text("id").primaryKey().$default(() => crypto.randomUUID()),
   sessionName: text("session_name").notNull().unique(),
@@ -49,6 +60,12 @@ export const activityLogs = sqliteTable("activity_logs", {
 });
 
 // Insert schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertWhatsappSessionSchema = createInsertSchema(whatsappSessions).omit({
   id: true,
   createdAt: true,
@@ -76,6 +93,9 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
 });
 
 // Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
 export type WhatsappSession = typeof whatsappSessions.$inferSelect;
 export type InsertWhatsappSession = z.infer<typeof insertWhatsappSessionSchema>;
 

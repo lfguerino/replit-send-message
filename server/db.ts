@@ -10,6 +10,16 @@ export const db = drizzle(sqlite, { schema });
 export function initializeDatabase() {
   // Create tables if they don't exist
   sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      email TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS whatsapp_sessions (
       id TEXT PRIMARY KEY,
       session_name TEXT NOT NULL UNIQUE,

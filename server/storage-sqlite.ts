@@ -8,6 +8,49 @@ export class SQLiteStorage implements IStorage {
     initializeDatabase();
   }
 
+  // Users
+  async getUser(id: string) {
+    const result = await db.select()
+      .from(schema.users)
+      .where(eq(schema.users.id, id))
+      .limit(1);
+    
+    return result[0] || null;
+  }
+
+  async getUserByUsername(username: string) {
+    const result = await db.select()
+      .from(schema.users)
+      .where(eq(schema.users.username, username))
+      .limit(1);
+    
+    return result[0] || null;
+  }
+
+  async createUser(userData: any) {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const user = {
+      id,
+      ...userData,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    await db.insert(schema.users).values(user);
+    return user;
+  }
+
+  async updateUser(id: string, updates: any) {
+    const updateData = { ...updates, updatedAt: new Date().toISOString() };
+    
+    await db.update(schema.users)
+      .set(updateData)
+      .where(eq(schema.users.id, id));
+    
+    return await this.getUser(id);
+  }
+
   // WhatsApp Sessions
   async createWhatsappSession(sessionData: any) {
     const id = crypto.randomUUID();
@@ -139,6 +182,16 @@ export class SQLiteStorage implements IStorage {
     }));
   }
 
+  async getAllContacts() {
+    const results = await db.select()
+      .from(schema.contacts);
+    
+    return results.map(contact => ({
+      ...contact,
+      customFields: contact.customFields ? JSON.parse(contact.customFields) : null,
+    }));
+  }
+
   async updateContact(id: string, updates: any) {
     const updateData = { ...updates };
     if (updateData.customFields) {
@@ -151,11 +204,6 @@ export class SQLiteStorage implements IStorage {
     
     // Return updated contact
     return await this.getContact(id);
-  }
-
-  async deleteContact(id: string) {
-    await db.delete(schema.contacts)
-      .where(eq(schema.contacts.id, id));
   }
 
   // Activity Logs

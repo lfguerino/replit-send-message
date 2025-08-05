@@ -226,7 +226,8 @@ export function CampaignForm() {
                   <FormLabel>Mensagem</FormLabel>
                   <FormControl>
                     <Textarea 
-                      rows={4}
+                      rows={8}
+                      className="min-h-[200px]"
                       placeholder="Digite sua mensagem aqui..." 
                       {...field} 
                     />
