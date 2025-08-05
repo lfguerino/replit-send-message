@@ -197,9 +197,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
         allContacts.push(...contactsWithCampaign);
       }
-      
       res.json(allContacts);
     } catch (error: any) {
+      console.error("Error getting contacts:", error);
       res.status(500).json({ message: error.message });
     }
   });

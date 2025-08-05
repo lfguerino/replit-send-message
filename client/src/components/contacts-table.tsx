@@ -20,10 +20,12 @@ interface Contact {
 export function ContactsTable() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: contacts = [], isLoading } = useQuery<Contact[]>({
+  const { data: contacts = [], isLoading, error } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  console.log("Contacts data:", contacts?.length, "contacts loaded");
 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
