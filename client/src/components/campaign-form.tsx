@@ -35,7 +35,7 @@ export function CampaignForm() {
     defaultValues: {
       name: "",
       message: "",
-      messageInterval: 3,
+      messageInterval: 5,
       scheduleType: "now",
     },
   });
@@ -150,8 +150,28 @@ export function CampaignForm() {
   };
 
   const onSaveDraft = () => {
-    const data = form.getValues();
     console.log("Salvando rascunho da campanha 📝");
+    const data = form.getValues();
+    
+    // Validate required fields for draft
+    if (!data.name?.trim()) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Nome da campanha é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.message?.trim()) {
+      toast({
+        title: "Campo obrigatório", 
+        description: "Mensagem é obrigatória",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createCampaignMutation.mutate({
       ...data,
       file: selectedFile || undefined,
@@ -271,76 +291,9 @@ export function CampaignForm() {
               )}
             </div>
 
-            {/* Campaign Settings */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="messageInterval"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Intervalo entre Mensagens</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o intervalo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">1 segundo</SelectItem>
-                        <SelectItem value="3">3 segundos</SelectItem>
-                        <SelectItem value="5">5 segundos</SelectItem>
-                        <SelectItem value="10">10 segundos</SelectItem>
-                        <SelectItem value="30">30 segundos</SelectItem>
-                        <SelectItem value="60">1 minuto</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="scheduleType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Agendamento</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione quando enviar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="now">Enviar agora</SelectItem>
-                        <SelectItem value="schedule">Agendar envio</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Scheduled Date (if schedule selected) */}
-            {form.watch('scheduleType') === 'schedule' && (
-              <FormField
-                control={form.control}
-                name="scheduledAt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data e Hora do Envio</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="datetime-local" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            {/* Hidden fields with default values */}
+            <input type="hidden" {...form.register('messageInterval')} />
+            <input type="hidden" {...form.register('scheduleType')} />
 
             {/* Action Buttons */}
             <div className="flex space-x-4 pt-4">
