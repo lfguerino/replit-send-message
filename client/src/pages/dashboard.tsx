@@ -1,17 +1,19 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { Sidebar } from "@/components/ui/sidebar";
 import { ConnectionPanel } from "@/components/connection-panel";
 import { CampaignForm } from "@/components/campaign-form";
 import { CampaignProgress } from "@/components/campaign-progress";
 import { ActivityLog } from "@/components/activity-log";
 import { StatsGrid } from "@/components/stats-grid";
+import { ContactsTable } from "@/components/contacts-table";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare, Plus, Home, Plug, Megaphone, Users, BarChart } from "lucide-react";
 
 export default function Dashboard() {
   const { isConnected, whatsappStatus } = useWebSocket();
+  const [activeSection, setActiveSection] = useState('dashboard');
 
   const { data: stats } = useQuery<{
     activeCampaigns: number;
@@ -41,26 +43,66 @@ export default function Dashboard() {
         
         <nav className="mt-6">
           <div className="px-4 space-y-2">
-            <a href="#" className="flex items-center px-3 py-2 text-sm font-medium text-whatsapp bg-green-50 rounded-lg">
-              <i className="fas fa-tachometer-alt mr-3"></i>
+            <button 
+              onClick={() => setActiveSection('dashboard')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                activeSection === 'dashboard' 
+                  ? 'text-whatsapp bg-green-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="button-nav-dashboard"
+            >
+              <Home className="w-4 h-4 mr-3" />
               Dashboard
-            </a>
-            <a href="#" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
-              <i className="fas fa-plug mr-3"></i>
+            </button>
+            <button 
+              onClick={() => setActiveSection('connections')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                activeSection === 'connections' 
+                  ? 'text-whatsapp bg-green-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="button-nav-connections"
+            >
+              <Plug className="w-4 h-4 mr-3" />
               Conexões
-            </a>
-            <a href="#" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
-              <i className="fas fa-bullhorn mr-3"></i>
+            </button>
+            <button 
+              onClick={() => setActiveSection('campaigns')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                activeSection === 'campaigns' 
+                  ? 'text-whatsapp bg-green-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="button-nav-campaigns"
+            >
+              <Megaphone className="w-4 h-4 mr-3" />
               Campanhas
-            </a>
-            <a href="#" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
-              <i className="fas fa-address-book mr-3"></i>
+            </button>
+            <button 
+              onClick={() => setActiveSection('contacts')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                activeSection === 'contacts' 
+                  ? 'text-whatsapp bg-green-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="button-nav-contacts"
+            >
+              <Users className="w-4 h-4 mr-3" />
               Contatos
-            </a>
-            <a href="#" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
-              <i className="fas fa-chart-bar mr-3"></i>
+            </button>
+            <button 
+              onClick={() => setActiveSection('reports')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                activeSection === 'reports' 
+                  ? 'text-whatsapp bg-green-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="button-nav-reports"
+            >
+              <BarChart className="w-4 h-4 mr-3" />
               Relatórios
-            </a>
+            </button>
           </div>
         </nav>
       </div>
@@ -72,8 +114,20 @@ export default function Dashboard() {
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Dashboard</h2>
-                <p className="text-sm text-gray-600 mt-1">Gerencie suas campanhas do WhatsApp</p>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {activeSection === 'dashboard' && 'Dashboard'}
+                  {activeSection === 'connections' && 'Conexões WhatsApp'}
+                  {activeSection === 'campaigns' && 'Campanhas'}
+                  {activeSection === 'contacts' && 'Contatos'}
+                  {activeSection === 'reports' && 'Relatórios'}
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  {activeSection === 'dashboard' && 'Gerencie suas campanhas do WhatsApp'}
+                  {activeSection === 'connections' && 'Configure e monitore conexões do WhatsApp'}
+                  {activeSection === 'campaigns' && 'Crie e gerencie campanhas de mensagens'}
+                  {activeSection === 'contacts' && 'Visualize todos os contatos importados'}
+                  {activeSection === 'reports' && 'Estatísticas e relatórios de atividade'}
+                </p>
               </div>
               <div className="flex items-center space-x-4">
                 {/* Connection Status */}
@@ -106,31 +160,61 @@ export default function Dashboard() {
 
         {/* Main Dashboard Content */}
         <main className="p-6 overflow-y-auto">
-          {/* Statistics Cards */}
-          <StatsGrid stats={stats} />
+          {activeSection === 'dashboard' && (
+            <>
+              {/* Statistics Cards */}
+              <StatsGrid stats={stats} />
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-            {/* WhatsApp Connection Panel */}
-            <div className="lg:col-span-1">
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+                {/* WhatsApp Connection Panel */}
+                <div className="lg:col-span-1">
+                  <ConnectionPanel />
+                </div>
+
+                {/* Campaign Management */}
+                <div className="lg:col-span-2">
+                  <CampaignForm />
+                </div>
+              </div>
+
+              {/* Active Campaigns and Progress */}
+              <div className="mt-8">
+                <CampaignProgress />
+              </div>
+
+              {/* Recent Activity Log */}
+              <div className="mt-8">
+                <ActivityLog />
+              </div>
+            </>
+          )}
+
+          {activeSection === 'connections' && (
+            <div className="space-y-6">
               <ConnectionPanel />
             </div>
+          )}
 
-            {/* Campaign Management */}
-            <div className="lg:col-span-2">
+          {activeSection === 'campaigns' && (
+            <div className="space-y-6">
               <CampaignForm />
+              <CampaignProgress />
             </div>
-          </div>
+          )}
 
-          {/* Active Campaigns and Progress */}
-          <div className="mt-8">
-            <CampaignProgress />
-          </div>
+          {activeSection === 'contacts' && (
+            <div className="space-y-6">
+              <ContactsTable />
+            </div>
+          )}
 
-          {/* Recent Activity Log */}
-          <div className="mt-8">
-            <ActivityLog />
-          </div>
+          {activeSection === 'reports' && (
+            <div className="space-y-6">
+              <StatsGrid stats={stats} />
+              <ActivityLog />
+            </div>
+          )}
         </main>
       </div>
     </div>

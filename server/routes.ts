@@ -181,6 +181,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all contacts with campaign information
+  app.get("/api/contacts", async (req, res) => {
+    try {
+      const campaigns = await storage.getAllCampaigns();
+      const allContacts = [];
+      
+      for (const campaign of campaigns) {
+        const contacts = await storage.getContactsByCampaign(campaign.id);
+        const contactsWithCampaign = contacts.map(contact => ({
+          ...contact,
+          campaignName: campaign.name,
+          campaignStatus: campaign.status
+        }));
+        allContacts.push(...contactsWithCampaign);
+      }
+      
+      res.json(allContacts);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/campaigns", upload.single('contactsFile'), async (req, res) => {
     try {
       // Convert messageInterval to number before validation
