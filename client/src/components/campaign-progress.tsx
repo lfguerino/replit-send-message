@@ -192,7 +192,7 @@ export function CampaignProgress() {
                       <Button
                         variant="default"
                         size="sm"
-                        className="bg-whatsapp hover:bg-whatsapp-dark text-white"
+                        className="bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => resumeCampaignMutation.mutate(campaign.id)}
                         disabled={resumeCampaignMutation.isPending}
                         data-testid={`button-start-${campaign.id}`}
