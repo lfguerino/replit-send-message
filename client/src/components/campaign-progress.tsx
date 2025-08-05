@@ -73,6 +73,8 @@ export function CampaignProgress() {
     switch (status) {
       case 'active':
         return <Badge className="bg-green-100 text-green-700">Enviando</Badge>;
+      case 'draft':
+        return <Badge className="bg-gray-100 text-gray-700">Rascunho</Badge>;
       case 'paused':
         return <Badge variant="secondary">Pausada</Badge>;
       case 'completed':
@@ -88,6 +90,8 @@ export function CampaignProgress() {
     switch (status) {
       case 'active':
         return 'bg-green-500 animate-pulse';
+      case 'draft':
+        return 'bg-gray-400';
       case 'paused':
         return 'bg-yellow-500';
       case 'completed':
@@ -103,6 +107,8 @@ export function CampaignProgress() {
     switch (status) {
       case 'active':
         return 'bg-whatsapp';
+      case 'draft':
+        return 'bg-gray-400';
       case 'paused':
         return 'bg-yellow-500';
       case 'completed':
@@ -182,7 +188,19 @@ export function CampaignProgress() {
                     {getStatusBadge(campaign.status)}
                   </div>
                   <div className="flex items-center space-x-2">
-                    {campaign.status === 'paused' ? (
+                    {campaign.status === 'draft' ? (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-whatsapp hover:bg-whatsapp-dark text-white"
+                        onClick={() => resumeCampaignMutation.mutate(campaign.id)}
+                        disabled={resumeCampaignMutation.isPending}
+                        data-testid={`button-start-${campaign.id}`}
+                      >
+                        <Play className="w-4 h-4 mr-1" />
+                        Iniciar Campanha
+                      </Button>
+                    ) : campaign.status === 'paused' ? (
                       <Button
                         variant="ghost"
                         size="sm"

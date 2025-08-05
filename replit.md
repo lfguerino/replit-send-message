@@ -19,6 +19,10 @@ Preferred communication style: Simple, everyday language.
 - **SQLite Migration**: Converted from in-memory storage to SQLite database for persistent data storage
 - **Navigation Menu**: Added functional navigation menu with Contacts section to view all imported contacts
 - **Draft Campaigns**: Fixed draft campaigns to appear in active campaigns list for better visibility
+- **Contacts Table Optimization**: Removed custom fields column to fix layout issues with strange characters
+- **Campaign Filtering**: Added campaign filter dropdown in contacts table for better organization
+- **Start Campaign Button**: Added prominent "Iniciar Campanha" button for draft campaigns with proper styling
+- **Text Localization**: Changed "draft" to "rascunho" throughout the application for Portuguese consistency
 
 ## System Architecture
 
