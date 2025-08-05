@@ -1,0 +1,13 @@
+2025/08/05-11:53:34.916 5e10 Reusing MANIFEST C:\Users\lfgue\Downloads\ChatBlast\ChatBlast\tokens\session_001\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/08/05-11:53:34.917 5e10 Recovering log #288
+2025/08/05-11:53:34.923 5e10 Reusing old log C:\Users\lfgue\Downloads\ChatBlast\ChatBlast\tokens\session_001\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000288.log 
+2025/08/05-11:53:35.953 25a0 Level-0 table #293: started
+2025/08/05-11:53:35.957 25a0 Level-0 table #293: 158608 bytes OK
+2025/08/05-11:53:35.959 25a0 Delete type=0 #288
+2025/08/05-11:53:35.959 59fc Manual compaction at level-0 from '\x00m\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00n\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/08/05-11:53:37.324 5e10 Compacting 1@1 + 1@2 files
+2025/08/05-11:53:37.347 5e10 Generated table #294@1: 25139 keys, 1069174 bytes
+2025/08/05-11:53:37.348 5e10 Compacted 1@1 + 1@2 files => 1069174 bytes
+2025/08/05-11:53:37.348 5e10 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/08/05-11:53:37.348 5e10 Delete type=2 #290
+2025/08/05-11:53:37.349 5e10 Delete type=2 #293

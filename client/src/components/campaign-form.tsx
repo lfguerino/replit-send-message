@@ -40,14 +40,18 @@ export function CampaignForm() {
     },
   });
 
-  const createCampaignMutation = useMutation({
+  const createCampaignMutation = useMutation({  
     mutationFn: async (data: CampaignFormData & { file?: File }) => {
+
+      console.log("Botão clicado para criar a campanha 🚀");
+      
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('message', data.message);
       formData.append('messageInterval', data.messageInterval.toString());
       formData.append('scheduleType', data.scheduleType);
       
+
       if (data.scheduledAt) {
         formData.append('scheduledAt', data.scheduledAt);
       }
@@ -135,6 +139,7 @@ export function CampaignForm() {
   };
 
   const onSubmit = (data: CampaignFormData) => {
+    console.log("Botão clicado para criar a campanha 🚀");
     createCampaignMutation.mutate({
       ...data,
       file: selectedFile || undefined,

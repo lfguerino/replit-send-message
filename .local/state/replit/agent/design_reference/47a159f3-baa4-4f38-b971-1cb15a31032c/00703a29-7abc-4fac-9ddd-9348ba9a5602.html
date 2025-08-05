@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Campaign Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        whatsapp: '#10B981',
+                        'whatsapp-dark': '#059669'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-inter">
+    <!-- @COMPONENT: AppLayout -->
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <!-- @COMPONENT: Sidebar -->
+        <div class="w-64 bg-white shadow-lg border-r border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-whatsapp rounded-lg flex items-center justify-center">
+                        <i class="fab fa-whatsapp text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-900">Campaign Manager</h1>
+                        <p class="text-sm text-gray-500">WhatsApp Automation</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="mt-6">
+                <div class="px-4 space-y-2">
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-whatsapp bg-green-50 rounded-lg">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        Dashboard
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-plug mr-3"></i>
+                        Conexões
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-bullhorn mr-3"></i>
+                        Campanhas
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-address-book mr-3"></i>
+                        Contatos
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        Relatórios
+                    </a>
+                </div>
+            </nav>
+        </div>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-hidden">
+            <!-- Header -->
+            <!-- @COMPONENT: Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-900">Dashboard</h2>
+                            <p class="text-sm text-gray-600 mt-1">Gerencie suas campanhas do WhatsApp</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <!-- Connection Status -->
+                            <div class="flex items-center space-x-2 px-3 py-2 bg-green-50 rounded-lg">
+                                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" data-bind="connectionStatus"></div>
+                                <span class="text-sm font-medium text-green-700" data-bind="connectionText">Conectado</span>
+                            </div>
+                            <button class="px-4 py-2 bg-whatsapp text-white rounded-lg hover:bg-whatsapp-dark transition-colors" data-event="click:createCampaign">
+                                <i class="fas fa-plus mr-2"></i>
+                                Nova Campanha
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: Header -->
+
+            <!-- Main Dashboard Content -->
+            <main class="p-6 overflow-y-auto">
+                <!-- Statistics Cards -->
+                <!-- @COMPONENT: StatsGrid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Campanhas Ativas</p>
+                                <p class="text-3xl font-semibold text-gray-900 mt-2" data-bind="activeCampaigns">3</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullhorn text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-green-600 font-medium">+12%</span>
+                            <span class="text-gray-600 ml-2">vs último mês</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Mensagens Enviadas</p>
+                                <p class="text-3xl font-semibold text-gray-900 mt-2" data-bind="messagesSent">1,247</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-paper-plane text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-green-600 font-medium">+8%</span>
+                            <span class="text-gray-600 ml-2">hoje</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Taxa de Entrega</p>
+                                <p class="text-3xl font-semibold text-gray-900 mt-2" data-bind="deliveryRate">98.2%</p>
+                            </div>
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-green-600 font-medium">+2.1%</span>
+                            <span class="text-gray-600 ml-2">melhoria</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Contatos Importados</p>
+                                <p class="text-3xl font-semibold text-gray-900 mt-2" data-bind="contactsImported">2,456</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-green-600 font-medium">+156</span>
+                            <span class="text-gray-600 ml-2">esta semana</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: StatsGrid -->
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- WhatsApp Connection Panel -->
+                    <!-- @COMPONENT: ConnectionPanel -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                    <i class="fab fa-whatsapp text-whatsapp mr-2"></i>
+                                    Conexão WhatsApp
+                                </h3>
+                            </div>
+                            <div class="p-6">
+                                <!-- Connection Status -->
+                                <!-- @STATE: isConnected:boolean = true -->
+                                <div class="text-center mb-6">
+                                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="fab fa-whatsapp text-whatsapp text-3xl"></i>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-2 mb-2">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                        <span class="text-sm font-medium text-green-700">Online</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600" data-bind="connectionInfo">Conectado há 2h 34min</p>
+                                </div>
+
+                                <!-- Session Info -->
+                                <div class="space-y-3 mb-6">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600">Sessão:</span>
+                                        <span class="text-sm font-medium text-gray-900" data-bind="sessionId">session_001</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600">Dispositivo:</span>
+                                        <span class="text-sm font-medium text-gray-900" data-bind="deviceName">Chrome Desktop</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600">Última atividade:</span>
+                                        <span class="text-sm font-medium text-gray-900" data-bind="lastActivity">Agora</span>
+                                    </div>
+                                </div>
+
+                                <!-- Connection Actions -->
+                                <div class="space-y-3">
+                                    <button class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors" data-event="click:disconnect">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>
+                                        Desconectar
+                                    </button>
+                                    <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" data-event="click:refreshConnection">
+                                        <i class="fas fa-sync-alt mr-2"></i>
+                                        Atualizar Status
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: ConnectionPanel -->
+
+                    <!-- Campaign Management -->
+                    <!-- @COMPONENT: CampaignManager -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900">Criar Nova Campanha</h3>
+                                    <button class="text-sm text-gray-500 hover:text-gray-700" data-event="click:toggleAdvanced">
+                                        <i class="fas fa-cog mr-1"></i>
+                                        Avançado
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <!-- Campaign Form -->
+                                <form class="space-y-6" data-event="submit:createCampaign">
+                                    <!-- Campaign Name -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Campanha</label>
+                                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp focus:border-transparent" 
+                                               placeholder="Ex: Promoção Black Friday 2024" data-bind="campaignName" data-mock="true">
+                                    </div>
+
+                                    <!-- Message Content -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Mensagem</label>
+                                        <textarea rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp focus:border-transparent" 
+                                                  placeholder="Digite sua mensagem aqui..." data-bind="messageContent" data-mock="true"></textarea>
+                                        <p class="text-xs text-gray-500 mt-1">Você pode usar variáveis: {nome}, {telefone}, {empresa}</p>
+                                    </div>
+
+                                    <!-- File Upload -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Lista de Contatos (Excel)</label>
+                                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors" data-implementation="FileUpload component with Excel validation">
+                                            <div class="space-y-1 text-center">
+                                                <div class="mx-auto h-12 w-12 text-gray-400">
+                                                    <i class="fas fa-file-excel text-3xl"></i>
+                                                </div>
+                                                <div class="flex text-sm text-gray-600">
+                                                    <label class="relative cursor-pointer bg-white rounded-md font-medium text-whatsapp hover:text-whatsapp-dark">
+                                                        <span>Enviar arquivo</span>
+                                                        <input type="file" class="sr-only" accept=".xlsx,.xls" data-event="change:handleFileUpload">
+                                                    </label>
+                                                    <p class="pl-1">ou arraste e solte</p>
+                                                </div>
+                                                <p class="text-xs text-gray-500">Arquivos Excel até 10MB</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- File Preview -->
+                                        <!-- @STATE: uploadedFile:object = null -->
+                                        <div class="mt-3 hidden" id="file-preview" data-bind="uploadedFile">
+                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                <div class="flex items-center space-x-3">
+                                                    <i class="fas fa-file-excel text-green-600"></i>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900" data-bind="fileName">contatos.xlsx</p>
+                                                        <p class="text-xs text-gray-500" data-bind="fileSize">1,234 contatos • 245KB</p>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="text-red-500 hover:text-red-700" data-event="click:removeFile">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Campaign Settings -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Intervalo entre Mensagens</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp focus:border-transparent" data-bind="messageInterval">
+                                                <option value="1" data-mock="true">1 segundo</option>
+                                                <option value="3" selected data-mock="true">3 segundos</option>
+                                                <option value="5" data-mock="true">5 segundos</option>
+                                                <option value="10" data-mock="true">10 segundos</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Agendamento</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp focus:border-transparent" data-bind="scheduleType">
+                                                <option value="now" selected data-mock="true">Enviar agora</option>
+                                                <option value="schedule" data-mock="true">Agendar envio</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex space-x-4 pt-4">
+                                        <button type="submit" class="flex-1 px-6 py-3 bg-whatsapp text-white rounded-lg hover:bg-whatsapp-dark transition-colors font-medium" data-event="click:startCampaign">
+                                            <i class="fas fa-play mr-2"></i>
+                                            Iniciar Campanha
+                                        </button>
+                                        <button type="button" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium" data-event="click:saveDraft">
+                                            <i class="fas fa-save mr-2"></i>
+                                            Salvar Rascunho
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: CampaignManager -->
+                </div>
+
+                <!-- Active Campaigns and Progress -->
+                <!-- @COMPONENT: CampaignProgress -->
+                <div class="mt-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Campanhas em Andamento</h3>
+                                <div class="flex items-center space-x-2">
+                                    <button class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" data-event="click:pauseAll">
+                                        <i class="fas fa-pause mr-1"></i>
+                                        Pausar Todas
+                                    </button>
+                                    <button class="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors" data-event="click:stopAll">
+                                        <i class="fas fa-stop mr-1"></i>
+                                        Parar Todas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <!-- Campaign Progress Items -->
+                            <!-- @MAP: activeCampaigns.map(campaign => ( -->
+                            <div class="space-y-4">
+                                <!-- Campaign 1 -->
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                            <h4 class="font-medium text-gray-900" data-bind="campaign.name" data-mock="true">Promoção Black Friday 2024</h4>
+                                            <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full" data-bind="campaign.status" data-mock="true">Enviando</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="p-1 text-gray-500 hover:text-gray-700" data-event="click:pauseCampaign">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                            <button class="p-1 text-red-500 hover:text-red-700" data-event="click:stopCampaign">
+                                                <i class="fas fa-stop"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Progress Bar -->
+                                    <div class="mb-3">
+                                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                            <span data-bind="campaign.progress" data-mock="true">847 de 1,234 enviadas</span>
+                                            <span data-bind="campaign.percentage" data-mock="true">68.6%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-whatsapp h-2 rounded-full" style="width: 68.6%" data-bind="campaign.progressWidth"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Campaign Stats -->
+                                    <div class="grid grid-cols-4 gap-4 text-sm">
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Enviadas</p>
+                                            <p class="font-semibold text-green-600" data-bind="campaign.sent" data-mock="true">847</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Entregues</p>
+                                            <p class="font-semibold text-blue-600" data-bind="campaign.delivered" data-mock="true">823</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Falharam</p>
+                                            <p class="font-semibold text-red-600" data-bind="campaign.failed" data-mock="true">12</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Pendentes</p>
+                                            <p class="font-semibold text-gray-600" data-bind="campaign.pending" data-mock="true">387</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Campaign 2 -->
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                            <h4 class="font-medium text-gray-900" data-mock="true">Lembretes de Consulta</h4>
+                                            <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full" data-mock="true">Pausada</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="p-1 text-green-500 hover:text-green-700" data-event="click:resumeCampaign">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="p-1 text-red-500 hover:text-red-700" data-event="click:stopCampaign">
+                                                <i class="fas fa-stop"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                            <span data-mock="true">156 de 320 enviadas</span>
+                                            <span data-mock="true">48.8%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 48.8%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-4 gap-4 text-sm">
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Enviadas</p>
+                                            <p class="font-semibold text-green-600" data-mock="true">156</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Entregues</p>
+                                            <p class="font-semibold text-blue-600" data-mock="true">152</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Falharam</p>
+                                            <p class="font-semibold text-red-600" data-mock="true">3</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-gray-500">Pendentes</p>
+                                            <p class="font-semibold text-gray-600" data-mock="true">164</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: CampaignProgress -->
+
+                <!-- Recent Activity Log -->
+                <!-- @COMPONENT: ActivityLog -->
+                <div class="mt-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Log de Atividades</h3>
+                                <button class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" data-event="click:clearLog">
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Limpar Log
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-3 max-h-64 overflow-y-auto">
+                                <!-- @MAP: activityLog.map(activity => ( -->
+                                <div class="flex items-start space-x-3" data-mock="true">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-900">Mensagem enviada para +55 11 99999-9999</p>
+                                        <p class="text-xs text-gray-500">há 2 minutos</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3" data-mock="true">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-900">Arquivo contatos.xlsx processado com sucesso</p>
+                                        <p class="text-xs text-gray-500">há 5 minutos</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3" data-mock="true">
+                                    <div class="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-900">Campanha "Lembretes de Consulta" pausada</p>
+                                        <p class="text-xs text-gray-500">há 8 minutos</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3" data-mock="true">
+                                    <div class="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-900">Erro ao enviar mensagem para +55 11 88888-8888</p>
+                                        <p class="text-xs text-gray-500">há 12 minutos</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: ActivityLog -->
+            </main>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AppLayout -->
+
+    <!-- Toast Notifications Container -->
+    <!-- @COMPONENT: ToastContainer -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Toasts will be dynamically added here -->
+    </div>
+    <!-- @END_COMPONENT: ToastContainer -->
+
+    <script>
+        // TODO: Implement WPP-CONNECT-SERVER integration
+        // TODO: Implement Excel file processing
+        // TODO: Implement campaign management logic
+        // TODO: Implement real-time progress tracking
+        // TODO: Implement error handling and logging
+
+        (function() {
+            // Mock functionality for demonstration
+            let isConnected = true;
+            let campaigns = [];
+            
+            // Simulated connection status updates
+            function updateConnectionStatus() {
+                // TODO: Implement actual connection status checking
+                const statusIndicator = document.querySelector('[data-bind="connectionStatus"]');
+                const statusText = document.querySelector('[data-bind="connectionText"]');
+                
+                if (isConnected) {
+                    statusIndicator.className = 'w-3 h-3 bg-green-500 rounded-full animate-pulse';
+                    statusText.textContent = 'Conectado';
+                    statusText.className = 'text-sm font-medium text-green-700';
+                } else {
+                    statusIndicator.className = 'w-3 h-3 bg-red-500 rounded-full';
+                    statusText.textContent = 'Desconectado';
+                    statusText.className = 'text-sm font-medium text-red-700';
+                }
+            }
+
+            // File upload handling
+            function handleFileUpload(event) {
+                // TODO: Implement Excel file validation and processing
+                const file = event.target.files[0];
+                if (file) {
+                    const preview = document.getElementById('file-preview');
+                    preview.classList.remove('hidden');
+                    preview.querySelector('[data-bind="fileName"]').textContent = file.name;
+                    preview.querySelector('[data-bind="fileSize"]').textContent = `${Math.round(file.size / 1024)}KB`;
+                }
+            }
+
+            // Toast notification system
+            function showToast(message, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `px-4 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 translate-x-full`;
+                
+                switch (type) {
+                    case 'success':
+                        toast.classList.add('bg-green-500');
+                        break;
+                    case 'error':
+                        toast.classList.add('bg-red-500');
+                        break;
+                    case 'warning':
+                        toast.classList.add('bg-yellow-500');
+                        break;
+                    default:
+                        toast.classList.add('bg-blue-500');
+                }
+                
+                toast.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span>${message}</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (toast.parentElement) {
+                            toast.remove();
+                        }
+                    }, 300);
+                }, 5000);
+            }
+
+            // Event listeners
+            document.addEventListener('DOMContentLoaded', function() {
+                updateConnectionStatus();
+                
+                // File upload
+                const fileInput = document.querySelector('input[type="file"]');
+                if (fileInput) {
+                    fileInput.addEventListener('change', handleFileUpload);
+                }
+                
+                // Demo notifications
+                setTimeout(() => {
+                    showToast('Sistema inicializado com sucesso', 'success');
+                }, 1000);
+            });
+
+            // Global functions for demo purposes
+            window.demoFunctions = {
+                disconnect: () => {
+                    isConnected = false;
+                    updateConnectionStatus();
+                    showToast('WhatsApp desconectado', 'warning');
+                },
+                connect: () => {
+                    isConnected = true;
+                    updateConnectionStatus();
+                    showToast('WhatsApp conectado com sucesso', 'success');
+                },
+                startCampaign: () => {
+                    showToast('Campanha iniciada com sucesso', 'success');
+                },
+                pauseCampaign: () => {
+                    showToast('Campanha pausada', 'warning');
+                }
+            };
+        })();
+    </script>
+</body>
+</html>
