@@ -36,7 +36,7 @@ export class WhatsappService extends EventEmitter {
         this.sessionName,
         (base64Qr: string, asciiQR: string) => {
           console.log('QR Code generated');
-          this.emit('qrcode', { base64: base64Qr, ascii: asciiQR });
+          this.emit('qrcode', { qr: `data:image/png;base64,${base64Qr}`, ascii: asciiQR });
         },
         (statusSession: string, session: string) => {
           console.log('Status Session:', statusSession, 'Session:', session);

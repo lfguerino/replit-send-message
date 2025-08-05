@@ -6,9 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Power, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { QRCodeModal } from "./qr-code-modal";
 
 export function ConnectionPanel() {
   const { toast } = useToast();
+  const { qrCode, connectionStatus } = useWebSocket();
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const { data: status, isLoading } = useQuery<{
     isConnected: boolean;
@@ -30,6 +34,7 @@ export function ConnectionPanel() {
   const connectMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/whatsapp/connect"),
     onSuccess: () => {
+      setShowQRModal(true);
       toast({
         title: "Conexão Iniciada",
         description: "Processo de conexão com WhatsApp iniciado",
@@ -181,6 +186,14 @@ export function ConnectionPanel() {
           </Button>
         </div>
       </CardContent>
+      
+      {/* QR Code Modal */}
+      <QRCodeModal
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+        qrCodeData={qrCode || undefined}
+        connectionStatus={connectionStatus}
+      />
     </Card>
   );
 }

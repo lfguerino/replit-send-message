@@ -465,5 +465,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Setup WhatsApp event listeners
+  whatsappService.on('qrcode', (data) => {
+    broadcast({ type: 'qrcode', data });
+  });
+
+  whatsappService.on('connected', (data) => {
+    broadcast({ type: 'whatsapp_connected', data });
+  });
+
+  whatsappService.on('disconnected', (data) => {
+    broadcast({ type: 'whatsapp_disconnected', data });
+  });
+
+  whatsappService.on('status', (data) => {
+    broadcast({ type: 'whatsapp_status', data });
+  });
+
   return httpServer;
 }

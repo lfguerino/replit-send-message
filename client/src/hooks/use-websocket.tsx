@@ -17,6 +17,8 @@ interface WhatsappStatus {
 export function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsappStatus | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<string>('');
   const ws = useRef<WebSocket | null>(null);
   const { toast } = useToast();
   const reconnectAttempts = useRef(0);
@@ -71,6 +73,8 @@ export function useWebSocket() {
           deviceName: 'Chrome Desktop',
           lastActivity: new Date()
         });
+        setConnectionStatus('authenticated');
+        setQrCode(null);
         toast({
           title: "WhatsApp Conectado",
           description: "Conexão estabelecida com sucesso",
@@ -80,6 +84,8 @@ export function useWebSocket() {
 
       case 'whatsapp_disconnected':
         setWhatsappStatus(prev => prev ? { ...prev, isConnected: false } : null);
+        setConnectionStatus('disconnected');
+        setQrCode(null);
         toast({
           title: "WhatsApp Desconectado",
           description: "Conexão perdida",
@@ -89,6 +95,8 @@ export function useWebSocket() {
         break;
 
       case 'qrcode':
+        setQrCode(message.data.qr);
+        setConnectionStatus('qr_ready');
         toast({
           title: "QR Code Gerado",
           description: "Escaneie o QR Code no WhatsApp Web",
@@ -172,5 +180,7 @@ export function useWebSocket() {
   return {
     isConnected,
     whatsappStatus,
+    qrCode,
+    connectionStatus,
   };
 }
