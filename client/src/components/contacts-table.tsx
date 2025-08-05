@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Search, User, Phone, MessageSquare } from "lucide-react";
+import { Search, User, Phone, MessageSquare, Filter } from "lucide-react";
 
 interface Contact {
   id: string;
@@ -19,6 +20,7 @@ interface Contact {
 
 export function ContactsTable() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
 
   const { data: contacts = [], isLoading, error } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
@@ -27,11 +29,18 @@ export function ContactsTable() {
 
   console.log("Contacts data:", contacts?.length, "contacts loaded");
 
-  const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.phone.includes(searchTerm) ||
-    contact.campaignName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get unique campaigns for the filter
+  const campaigns = Array.from(new Set(contacts.map(contact => contact.campaignName)));
+
+  const filteredContacts = contacts.filter(contact => {
+    const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.phone.includes(searchTerm) ||
+      contact.campaignName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCampaign = selectedCampaign === "all" || contact.campaignName === selectedCampaign;
+    
+    return matchesSearch && matchesCampaign;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -75,20 +84,38 @@ export function ContactsTable() {
   return (
     <Card>
       <CardHeader className="border-b border-gray-200">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <CardTitle className="flex items-center space-x-2">
             <User className="w-5 h-5" />
-            <span>Contatos Importados ({contacts.length})</span>
+            <span>Contatos Importados ({filteredContacts.length} de {contacts.length})</span>
           </CardTitle>
-          <div className="relative w-64">
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Buscar contatos..."
+              placeholder="Buscar por nome, telefone ou campanha..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
               data-testid="input-search-contacts"
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+              <SelectTrigger className="w-48" data-testid="select-campaign-filter">
+                <SelectValue placeholder="Filtrar por campanha" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as campanhas</SelectItem>
+                {campaigns.map(campaign => (
+                  <SelectItem key={campaign} value={campaign}>
+                    {campaign}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>
@@ -116,9 +143,6 @@ export function ContactsTable() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Campos Extras
                   </th>
                 </tr>
               </thead>
@@ -164,17 +188,6 @@ export function ContactsTable() {
                         <p className="text-xs text-red-600 mt-1 max-w-xs truncate" title={contact.errorMessage}>
                           {contact.errorMessage}
                         </p>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {contact.customFields && (
-                        <div className="text-sm text-gray-500">
-                          {Object.entries(contact.customFields).map(([key, value]) => (
-                            <div key={key} className="text-xs">
-                              <span className="font-medium">{key}:</span> {String(value)}
-                            </div>
-                          ))}
-                        </div>
                       )}
                     </td>
                   </tr>
