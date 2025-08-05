@@ -200,4 +200,9 @@ export class SQLiteStorage implements IStorage {
     await db.delete(schema.contacts)
       .where(eq(schema.contacts.id, id));
   }
+
+  async deleteContactsByCampaign(campaignId: string): Promise<void> {
+    await db.delete(schema.contacts)
+      .where(eq(schema.contacts.campaignId, campaignId));
+  }
 }

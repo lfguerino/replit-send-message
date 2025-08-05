@@ -352,6 +352,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/campaigns/:id", async (req, res) => {
+    try {
+      const campaignId = req.params.id;
+      const campaign = await storage.getCampaign(campaignId);
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campanha não encontrada" });
+      }
+
+      // Delete all contacts associated with the campaign
+      await storage.deleteContactsByCampaign(campaignId);
+      
+      // Delete the campaign
+      await storage.deleteCampaign(campaignId);
+
+      await storage.createActivityLog({
+        type: 'campaign_deleted',
+        message: `Campanha "${campaign.name}" e seus contatos foram excluídos`,
+        metadata: JSON.stringify({ campaignId, campaignName: campaign.name })
+      });
+
+      broadcast({ type: 'campaign_deleted', data: { campaignId, name: campaign.name } });
+
+      res.json({ message: "Campanha e contatos excluídos com sucesso" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Activity Logs Routes
   app.get("/api/activity-logs", async (req, res) => {
     try {

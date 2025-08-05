@@ -21,6 +21,11 @@ export interface IStorage {
   updateContact(id: string, updates: Partial<Contact>): Promise<Contact | undefined>;
   getContactsByCampaign(campaignId: string): Promise<Contact[]>;
   createMultipleContacts(contacts: InsertContact[]): Promise<Contact[]>;
+  deleteContact(id: string): Promise<void>;
+  deleteContactsByCampaign(campaignId: string): Promise<void>;
+
+  // Campaign Management
+  deleteCampaign(id: string): Promise<void>;
 
   // Activity Logs
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;

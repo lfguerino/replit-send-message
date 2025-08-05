@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Play, Pause, Square, MoreHorizontal } from "lucide-react";
+import { Play, Pause, Square, Trash2, MoreHorizontal } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -59,6 +59,26 @@ export function CampaignProgress() {
     mutationFn: (campaignId: string) => apiRequest("POST", `/api/campaigns/${campaignId}/stop`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/campaigns/active"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCampaignMutation = useMutation({
+    mutationFn: (campaignId: string) => apiRequest("DELETE", `/api/campaigns/${campaignId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: "Campanha Excluída",
+        description: "Campanha e todos os contatos foram removidos com sucesso",
+      });
     },
     onError: (error: any) => {
       toast({
@@ -230,6 +250,21 @@ export function CampaignProgress() {
                         <Square className="w-4 h-4" />
                       </Button>
                     )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => {
+                        if (window.confirm(`Tem certeza que deseja excluir a campanha "${campaign.name}" e todos os seus contatos?`)) {
+                          deleteCampaignMutation.mutate(campaign.id);
+                        }
+                      }}
+                      disabled={deleteCampaignMutation.isPending}
+                      data-testid={`button-delete-${campaign.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
                 
