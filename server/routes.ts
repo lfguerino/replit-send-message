@@ -52,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   whatsappService.on('connected', (data) => {
     storage.updateWhatsappSession(data.sessionName, { 
       status: 'connected',
-      lastActivity: new Date() 
+      lastActivity: new Date().toISOString() 
     });
     broadcast({ type: 'whatsapp_connected', data });
     storage.createActivityLog({
@@ -164,7 +164,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/campaigns/active", async (req, res) => {
     try {
-      const campaigns = await storage.getActiveCampaigns();
+      // Get all campaigns (including drafts) to display in the dashboard
+      const campaigns = await storage.getAllCampaigns();
       const campaignsWithProgress = await Promise.all(
         campaigns.map(async (campaign) => {
           const contacts = await storage.getContactsByCampaign(campaign.id);
@@ -244,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           campaignId: campaign.id,
           name: contact.name,
           phone: contact.phone,
-          customFields: contact.customFields,
+          customFields: contact.customFields ? JSON.stringify(contact.customFields) : null,
           status: 'pending' as const
         }));
 
@@ -258,11 +259,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createActivityLog({
           type: 'file_processed',
           message: `Arquivo ${req.file.originalname} processado com sucesso`,
-          metadata: { 
+          metadata: JSON.stringify({ 
             campaignId: campaign.id,
             contactsImported: contacts.length,
             errors: excelResult.errors
-          }
+          })
         });
       }
 
@@ -294,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivityLog({
         type: 'campaign_started',
         message: `Campanha "${campaign.name}" iniciada`,
-        metadata: { campaignId }
+        metadata: JSON.stringify({ campaignId })
       });
 
       broadcast({ type: 'campaign_started', data: { campaignId, name: campaign.name } });
@@ -317,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivityLog({
         type: 'campaign_paused',
         message: `Campanha "${campaign.name}" pausada`,
-        metadata: { campaignId }
+        metadata: JSON.stringify({ campaignId })
       });
 
       broadcast({ type: 'campaign_paused', data: { campaignId, name: campaign.name } });
@@ -340,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivityLog({
         type: 'campaign_stopped',
         message: `Campanha "${campaign.name}" interrompida`,
-        metadata: { campaignId }
+        metadata: JSON.stringify({ campaignId })
       });
 
       broadcast({ type: 'campaign_stopped', data: { campaignId, name: campaign.name } });
@@ -427,7 +428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (result.success) {
           await storage.updateContact(contact.id, {
             status: 'sent',
-            sentAt: new Date()
+            sentAt: new Date().toISOString()
           });
 
           await storage.updateCampaign(campaignId, {
@@ -486,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivityLog({
         type: 'campaign_completed',
         message: `Campanha "${campaign.name}" concluída`,
-        metadata: { campaignId }
+        metadata: JSON.stringify({ campaignId })
       });
 
       broadcast({ type: 'campaign_completed', data: { campaignId, name: campaign.name } });

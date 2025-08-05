@@ -1,51 +1,51 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, jsonb } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const whatsappSessions = pgTable("whatsapp_sessions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const whatsappSessions = sqliteTable("whatsapp_sessions", {
+  id: text("id").primaryKey().$default(() => crypto.randomUUID()),
   sessionName: text("session_name").notNull().unique(),
   status: text("status").notNull().default("disconnected"), // connected, disconnected, connecting
   deviceName: text("device_name"),
-  lastActivity: timestamp("last_activity"),
-  createdAt: timestamp("created_at").defaultNow(),
+  lastActivity: text("last_activity"), // ISO string
+  createdAt: text("created_at").$default(() => new Date().toISOString()),
 });
 
-export const campaigns = pgTable("campaigns", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const campaigns = sqliteTable("campaigns", {
+  id: text("id").primaryKey().$default(() => crypto.randomUUID()),
   name: text("name").notNull(),
   message: text("message").notNull(),
   status: text("status").notNull().default("draft"), // draft, active, paused, completed, stopped
-  messageInterval: integer("message_interval").notNull().default(3), // seconds
+  messageInterval: integer("message_interval").notNull().default(5), // seconds
   scheduleType: text("schedule_type").notNull().default("now"), // now, schedule
-  scheduledAt: timestamp("scheduled_at"),
+  scheduledAt: text("scheduled_at"), // ISO string
   totalContacts: integer("total_contacts").notNull().default(0),
   sentCount: integer("sent_count").notNull().default(0),
   deliveredCount: integer("delivered_count").notNull().default(0),
   failedCount: integer("failed_count").notNull().default(0),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: text("created_at").$default(() => new Date().toISOString()),
+  updatedAt: text("updated_at").$default(() => new Date().toISOString()),
 });
 
-export const contacts = pgTable("contacts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  campaignId: varchar("campaign_id").references(() => campaigns.id).notNull(),
+export const contacts = sqliteTable("contacts", {
+  id: text("id").primaryKey().$default(() => crypto.randomUUID()),
+  campaignId: text("campaign_id").references(() => campaigns.id).notNull(),
   name: text("name").notNull(),
   phone: text("phone").notNull(),
-  customFields: jsonb("custom_fields"), // for template variables like {empresa}
+  customFields: text("custom_fields"), // JSON string for template variables like {empresa}
   status: text("status").notNull().default("pending"), // pending, sent, delivered, failed
-  sentAt: timestamp("sent_at"),
-  deliveredAt: timestamp("delivered_at"),
+  sentAt: text("sent_at"), // ISO string
+  deliveredAt: text("delivered_at"), // ISO string
   errorMessage: text("error_message"),
 });
 
-export const activityLogs = pgTable("activity_logs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const activityLogs = sqliteTable("activity_logs", {
+  id: text("id").primaryKey().$default(() => crypto.randomUUID()),
   type: text("type").notNull(), // message_sent, message_delivered, message_failed, campaign_started, etc.
   message: text("message").notNull(),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at").defaultNow(),
+  metadata: text("metadata"), // JSON string
+  createdAt: text("created_at").$default(() => new Date().toISOString()),
 });
 
 // Insert schemas

@@ -11,11 +11,14 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes (August 2025)
 
 - **Migration Complete**: Successfully migrated project from Replit Agent to Replit environment
-- **Excel Processing Update**: Modified to read company names from column B and phone numbers from column F (specific column positions)
+- **Excel Processing Update**: Modified to read company names from column B and phone numbers from column F (specific column positions)  
 - **Phone Number Handling**: Enhanced Brazilian phone number cleaning to handle formats like "(11) 99761-3946"
 - **Save Draft Feature**: Fixed save draft button functionality with proper validation
 - **UI Simplification**: Hidden message interval and scheduling options (defaults: 5 seconds between messages, immediate sending)
 - **Backend Fixes**: Resolved string-to-number conversion issues for messageInterval field
+- **SQLite Migration**: Converted from in-memory storage to SQLite database for persistent data storage
+- **Navigation Menu**: Added functional navigation menu with Contacts section to view all imported contacts
+- **Draft Campaigns**: Fixed draft campaigns to appear in active campaigns list for better visibility
 
 ## System Architecture
 
