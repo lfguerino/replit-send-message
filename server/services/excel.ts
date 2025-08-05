@@ -46,17 +46,18 @@ export class ExcelService {
         String(header).toLowerCase().trim()
       );
 
-      // Find required columns
-      const nameIndex = this.findColumnIndex(headers, ['nome', 'name', 'cliente']);
-      const phoneIndex = this.findColumnIndex(headers, ['telefone', 'phone', 'celular', 'whatsapp']);
+      // Use specific columns: B for company name (index 1) and F for phone (index 5)
+      const nameIndex = 1; // Column B (0-indexed, so B = 1)
+      const phoneIndex = 5; // Column F (0-indexed, so F = 5)
 
-      if (nameIndex === -1) {
-        result.errors.push('Coluna "nome" não encontrada. Certifique-se de que existe uma coluna com nome, cliente ou name');
+      // Check if the required columns exist in the data
+      if (jsonData[0].length <= nameIndex) {
+        result.errors.push('Coluna B (nome da empresa) não encontrada na planilha');
         return result;
       }
 
-      if (phoneIndex === -1) {
-        result.errors.push('Coluna "telefone" não encontrada. Certifique-se de que existe uma coluna com telefone, phone, celular ou whatsapp');
+      if (jsonData[0].length <= phoneIndex) {
+        result.errors.push('Coluna F (telefone) não encontrada na planilha');
         return result;
       }
 

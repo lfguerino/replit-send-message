@@ -41,7 +41,7 @@ export function CampaignForm() {
   });
 
   const createCampaignMutation = useMutation({  
-    mutationFn: async (data: CampaignFormData & { file?: File }) => {
+    mutationFn: async (data: CampaignFormData & { file?: File; status?: string }) => {
 
       console.log("Botão clicado para criar a campanha 🚀");
       
@@ -50,6 +50,7 @@ export function CampaignForm() {
       formData.append('message', data.message);
       formData.append('messageInterval', data.messageInterval.toString());
       formData.append('scheduleType', data.scheduleType);
+      formData.append('status', data.status || 'draft');
       
 
       if (data.scheduledAt) {
@@ -73,10 +74,11 @@ export function CampaignForm() {
 
       return response.json();
     },
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
+      const isDraft = variables.status === 'draft';
       toast({
-        title: "Campanha Criada",
-        description: `Campanha criada com ${result.contactsImported} contatos importados`,
+        title: isDraft ? "Rascunho Salvo" : "Campanha Criada",
+        description: `${isDraft ? 'Rascunho salvo' : 'Campanha criada'} com ${result.contactsImported} contatos importados`,
       });
       form.reset();
       setSelectedFile(null);
@@ -143,6 +145,17 @@ export function CampaignForm() {
     createCampaignMutation.mutate({
       ...data,
       file: selectedFile || undefined,
+      status: 'active',
+    });
+  };
+
+  const onSaveDraft = () => {
+    const data = form.getValues();
+    console.log("Salvando rascunho da campanha 📝");
+    createCampaignMutation.mutate({
+      ...data,
+      file: selectedFile || undefined,
+      status: 'draft',
     });
   };
 
@@ -344,6 +357,7 @@ export function CampaignForm() {
                 variant="outline"
                 className="font-medium"
                 disabled={createCampaignMutation.isPending}
+                onClick={onSaveDraft}
               >
                 <Save className="w-4 h-4 mr-2" />
                 Salvar Rascunho
