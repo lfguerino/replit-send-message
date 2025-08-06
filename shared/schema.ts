@@ -27,6 +27,8 @@ export const campaigns = sqliteTable("campaigns", {
   id: text("id").primaryKey().$default(() => crypto.randomUUID()),
   name: text("name").notNull(),
   message: text("message").notNull(),
+  messageBlocks: text("message_blocks"), // JSON array of message blocks
+  showTyping: integer("show_typing", { mode: 'boolean' }).default(true), // Show typing indicator
   status: text("status").notNull().default("draft"), // draft, active, paused, completed, stopped
   messageInterval: integer("message_interval").notNull().default(5), // seconds
   scheduleType: text("schedule_type").notNull().default("now"), // now, schedule

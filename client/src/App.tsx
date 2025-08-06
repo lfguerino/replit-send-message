@@ -53,8 +53,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <Toaster />
           <Router />
+          <Toaster />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

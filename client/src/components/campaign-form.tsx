@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { FileSpreadsheet, Upload, X, Play, Save, Settings } from "lucide-react";
+import { FileSpreadsheet, Upload, X, Play, Save, Settings, Plus, Trash2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -17,9 +18,11 @@ import { z } from "zod";
 const campaignSchema = z.object({
   name: z.string().min(1, "Nome da campanha é obrigatório"),
   message: z.string().min(1, "Mensagem é obrigatória"),
+  messageBlocks: z.array(z.string()).optional(),
   messageInterval: z.number(),
   scheduleType: z.string(),
   scheduledAt: z.string().optional(),
+  showTyping: z.boolean().optional(),
 });
 
 type CampaignFormData = z.infer<typeof campaignSchema>;
@@ -28,6 +31,7 @@ export function CampaignForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileStats, setFileStats] = useState<{ contacts: number; size: string } | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [messageBlocks, setMessageBlocks] = useState<string[]>([]);
   const { toast } = useToast();
 
   const form = useForm<CampaignFormData>({
@@ -35,8 +39,10 @@ export function CampaignForm() {
     defaultValues: {
       name: "",
       message: "",
+      messageBlocks: [],
       messageInterval: 5,
       scheduleType: "now",
+      showTyping: true,
     },
   });
 
@@ -48,8 +54,10 @@ export function CampaignForm() {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('message', data.message);
+      formData.append('messageBlocks', JSON.stringify(messageBlocks.filter(block => block.trim() !== '')));
       formData.append('messageInterval', '5');
       formData.append('scheduleType', data.scheduleType);
+      formData.append('showTyping', String(data.showTyping ?? true));
       formData.append('status', data.status || 'draft');
       
 
@@ -83,6 +91,7 @@ export function CampaignForm() {
       form.reset();
       setSelectedFile(null);
       setFileStats(null);
+      setMessageBlocks([]);
       queryClient.invalidateQueries({ queryKey: ['/api/campaigns'] });
     },
     onError: (error: any) => {
@@ -138,6 +147,22 @@ export function CampaignForm() {
     if (fileInput) {
       fileInput.value = '';
     }
+  };
+
+  // Message blocks management
+  const addMessageBlock = () => {
+    setMessageBlocks([...messageBlocks, '']);
+  };
+
+  const removeMessageBlock = (index: number) => {
+    const newBlocks = messageBlocks.filter((_, i) => i !== index);
+    setMessageBlocks(newBlocks);
+  };
+
+  const updateMessageBlock = (index: number, value: string) => {
+    const newBlocks = [...messageBlocks];
+    newBlocks[index] = value;
+    setMessageBlocks(newBlocks);
   };
 
   const onSubmit = (data: CampaignFormData) => {
@@ -223,19 +248,111 @@ export function CampaignForm() {
               name="message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mensagem</FormLabel>
+                  <FormLabel>Mensagem Principal</FormLabel>
                   <FormControl>
                     <Textarea 
-                      rows={8}
-                      className="min-h-[200px]"
-                      placeholder="Digite sua mensagem aqui..." 
+                      rows={6}
+                      className="min-h-[150px]"
+                      placeholder="Digite sua mensagem principal aqui..." 
                       {...field} 
+                      data-testid="textarea-main-message"
                     />
                   </FormControl>
                   <FormDescription>
-                    Você pode usar variáveis: {"{nome}"}, {"{telefone}"}, {"{empresa}"}
+                    Primeira mensagem a ser enviada. Você pode usar variáveis: {"{nome}"}, {"{telefone}"}, {"{empresa}"}
                   </FormDescription>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Message Blocks */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <FormLabel>Mensagens Adicionais</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addMessageBlock}
+                  data-testid="button-add-message-block"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Adicionar Bloco
+                </Button>
+              </div>
+              
+              {messageBlocks.length > 0 && (
+                <>
+                  {messageBlocks.map((block, index) => (
+                    <div key={index} className="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          Bloco {index + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeMessageBlock(index)}
+                          data-testid={`button-remove-block-${index}`}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                      <Textarea
+                        rows={4}
+                        placeholder={`Digite o conteúdo do bloco ${index + 1}...`}
+                        value={block}
+                        onChange={(e) => updateMessageBlock(index, e.target.value)}
+                        data-testid={`textarea-message-block-${index}`}
+                      />
+                      <p className="text-xs text-gray-500 mt-2">
+                        Este bloco será enviado após a mensagem principal, respeitando a cadência de 5 segundos
+                      </p>
+                    </div>
+                  ))}
+                  
+                  <p className="text-sm text-gray-600 mt-2">
+                    {messageBlocks.filter(block => block.trim() !== '').length > 0 && (
+                      <>
+                        Serão enviados {messageBlocks.filter(block => block.trim() !== '').length + 1} mensagens para cada contato:
+                        <br />
+                        1 mensagem principal + {messageBlocks.filter(block => block.trim() !== '').length} blocos adicionais
+                      </>
+                    )}
+                  </p>
+                </>
+              )}
+              
+              {messageBlocks.length === 0 && (
+                <p className="text-sm text-gray-500 italic">
+                  Clique em "Adicionar Bloco" para criar mensagens adicionais que serão enviadas sequencialmente para cada contato.
+                </p>
+              )}
+            </div>
+
+            {/* Typing Indicator Option */}
+            <FormField
+              control={form.control}
+              name="showTyping"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      Indicador de Digitação
+                    </FormLabel>
+                    <FormDescription>
+                      Mostra "digitando..." antes de cada mensagem para simular conversa natural
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="switch-typing-indicator"
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

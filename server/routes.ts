@@ -60,29 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/first-access", async (req: AuthRequest, res) => {
-    try {
-      const { username, password } = req.body;
-      
-      // Check if any user exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Usuário já existe" });
-      }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await storage.createUser({
-        username,
-        password: hashedPassword,
-        isActive: true,
-      });
-
-      res.json({ message: "Usuário criado com sucesso" });
-    } catch (error) {
-      console.error("First access error:", error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
 
   app.get("/api/auth/me", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -108,6 +86,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ message: "Logout realizado com sucesso" });
     });
+  });
+
+  // Update user profile
+  app.put("/api/auth/profile", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { username, email } = req.body;
+      const userId = req.session.userId!;
+
+      // Check if username is already taken by another user
+      if (username) {
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "Nome de usuário já está em uso" });
+        }
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Update user information
+      const updatedUser = await storage.updateUser(userId, {
+        username: username || user.username,
+        email: email || user.email,
+      });
+
+      res.json({ 
+        message: "Perfil atualizado com sucesso",
+        user: {
+          id: updatedUser.id,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          isActive: updatedUser.isActive
+        }
+      });
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Update user password
+  app.put("/api/auth/password", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.session.userId!;
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Senha atual incorreta" });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await storage.updateUser(userId, {
+        password: hashedNewPassword,
+      });
+
+      res.json({ message: "Senha alterada com sucesso" });
+    } catch (error) {
+      console.error("Password update error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
   });
 
   // WebSocket server for real-time updates
@@ -212,14 +262,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const existingUser = await storage.getUserByUsername("admin");
       if (!existingUser) {
-        const hashedPassword = await bcrypt.hash("admin123", 10);
+        // Senha forte: CampaignManager2024Pro (sem caracteres especiais, mas forte)
+        const hashedPassword = await bcrypt.hash("CampaignManager2024Pro", 10);
         await storage.createUser({
           username: "admin",
           password: hashedPassword,
           email: "admin@whatsapp-campaign.com",
           isActive: true,
         });
-        console.log("Default user created: admin/admin123");
+        console.log("Default user created: admin/CampaignManager2024Pro");
       }
     } catch (error) {
       console.error("Error creating default user:", error);
@@ -573,34 +624,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Replace template variables in message
-        let message = campaign.message;
-        message = message.replace(/{nome}/g, contact.name);
-        message = message.replace(/{telefone}/g, contact.phone);
-        
-        if (contact.customFields) {
-          try {
-            // Parse custom fields if it's a string (from database)
-            const customFields = typeof contact.customFields === 'string' 
-              ? JSON.parse(contact.customFields) 
-              : contact.customFields;
-            
-            Object.entries(customFields).forEach(([key, value]) => {
-              message = message.replace(new RegExp(`{${key}}`, 'g'), String(value));
-            });
-          } catch (error) {
-            console.warn('Error parsing custom fields for contact:', contact.id, error);
+        // Function to replace template variables in any message
+        const replaceVariables = (messageText: string) => {
+          let processedMessage = messageText;
+          processedMessage = processedMessage.replace(/{nome}/g, contact.name);
+          processedMessage = processedMessage.replace(/{telefone}/g, contact.phone);
+          
+          if (contact.customFields) {
+            try {
+              const customFields = typeof contact.customFields === 'string' 
+                ? JSON.parse(contact.customFields) 
+                : contact.customFields;
+              
+              Object.entries(customFields).forEach(([key, value]) => {
+                processedMessage = processedMessage.replace(new RegExp(`{${key}}`, 'g'), String(value));
+              });
+            } catch (error) {
+              console.warn('Error parsing custom fields for contact:', contact.id, error);
+            }
           }
-        }
+          return processedMessage;
+        };
 
-        // Send message
-        const result = await whatsappService.sendMessage(contact.phone, message);
+        // Replace template variables in main message
+        let message = replaceVariables(campaign.message);
+
+        // Send message with typing indicator (based on campaign settings)
+        const result = await whatsappService.sendMessage(contact.phone, message, 2, { showTyping: campaign.showTyping });
 
         if (result.success) {
           await storage.updateContact(contact.id, {
             status: 'sent',
             sentAt: new Date().toISOString()
           });
+
+          await storage.createActivityLog({
+            type: 'message_sent',
+            message: `Mensagem principal enviada para ${contact.name} (${contact.phone})`,
+            metadata: JSON.stringify({
+              campaignId,
+              contactId: contact.id,
+              phone: contact.phone,
+              message
+            })
+          });
+
+          // Process message blocks if they exist
+          if (campaign.messageBlocks) {
+            try {
+              const blocks = JSON.parse(campaign.messageBlocks);
+              if (Array.isArray(blocks) && blocks.length > 0) {
+                for (let i = 0; i < blocks.length; i++) {
+                  const block = blocks[i];
+                  if (block && block.trim() !== '') {
+                    // Wait for the interval before sending next block
+                    await new Promise(resolve => setTimeout(resolve, campaign.messageInterval * 1000));
+                    
+                    // Check if campaign is still active before sending block
+                    const currentCampaignCheck = await storage.getCampaign(campaignId);
+                    if (!currentCampaignCheck || currentCampaignCheck.status !== 'active') {
+                      console.log('Campaign stopped, skipping remaining blocks');
+                      break;
+                    }
+                    
+                    // Process template variables in block message
+                    const blockMessage = replaceVariables(block);
+                    
+                    const blockResult = await whatsappService.sendMessage(contact.phone, blockMessage, 2, { showTyping: campaign.showTyping });
+                    
+                    if (blockResult.success) {
+                      await storage.createActivityLog({
+                        type: 'message_sent',
+                        message: `Bloco ${i + 1} enviado para ${contact.name} (${contact.phone})`,
+                        metadata: JSON.stringify({
+                          campaignId,
+                          contactId: contact.id,
+                          phone: contact.phone,
+                          blockIndex: i + 1,
+                          blockMessage
+                        })
+                      });
+
+                      broadcast({
+                        type: 'message_block_sent',
+                        data: { 
+                          campaignId, 
+                          contactId: contact.id, 
+                          blockIndex: i + 1, 
+                          totalBlocks: blocks.length 
+                        }
+                      });
+                    } else {
+                      // Log block send failure
+                      await storage.createActivityLog({
+                        type: 'error',
+                        message: `Falha ao enviar bloco ${i + 1} para ${contact.name}: ${blockResult.error}`,
+                        metadata: JSON.stringify({
+                          campaignId,
+                          contactId: contact.id,
+                          phone: contact.phone,
+                          blockIndex: i + 1,
+                          error: blockResult.error
+                        })
+                      });
+                      
+                      // If it's a connection error, stop processing blocks for this contact
+                      if (blockResult.error?.includes('detached Frame') || blockResult.error?.includes('não conectado')) {
+                        console.log('Connection error detected, stopping block processing for this contact');
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error processing message blocks:', error);
+              await storage.createActivityLog({
+                type: 'error',
+                message: `Erro ao processar blocos de mensagem para ${contact.name}: ${error}`,
+                metadata: JSON.stringify({
+                  campaignId,
+                  contactId: contact.id,
+                  phone: contact.phone,
+                  error: error instanceof Error ? error.message : String(error)
+                })
+              });
+            }
+          }
 
           await storage.updateCampaign(campaignId, {
             sentCount: currentCampaign.sentCount + 1

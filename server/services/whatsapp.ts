@@ -96,7 +96,10 @@ export class WhatsappService extends EventEmitter {
     });
   }
 
-  async sendMessage(to: string, message: string): Promise<{ success: boolean; error?: string }> {
+  async sendMessage(to: string, message: string, retries = 2, options?: { 
+    showTyping?: boolean, 
+    typingDuration?: number 
+  }): Promise<{ success: boolean; error?: string }> {
     if (!this.client) {
       return { success: false, error: 'WhatsApp not connected' };
     }
@@ -106,15 +109,100 @@ export class WhatsappService extends EventEmitter {
       const formattedNumber = this.formatPhoneNumber(to);
       console.log(`Sending message to: ${to} -> ${formattedNumber}`);
       
+      // Check connection state before sending
+      try {
+        const state = await this.client.getConnectionState();
+        if (state !== 'CONNECTED') {
+          return { success: false, error: `WhatsApp não conectado. Estado: ${state}` };
+        }
+      } catch (stateError) {
+        console.warn('Could not check connection state:', stateError);
+      }
+
+      // Show typing indicator if requested
+      if (options?.showTyping !== false) {
+        const typingDuration = options?.typingDuration || this.calculateTypingDuration(message);
+        console.log(`Showing typing for ${typingDuration}ms for message: ${message.substring(0, 50)}...`);
+        
+        try {
+          await this.client.startTyping(formattedNumber);
+          await new Promise(resolve => setTimeout(resolve, typingDuration));
+          await this.client.stopTyping(formattedNumber);
+        } catch (typingError) {
+          console.warn('Error with typing indicator:', typingError);
+          // Continue with message sending even if typing fails
+        }
+      }
+      
       await this.client.sendText(formattedNumber, message);
       this.emit('messageSent', { to: to, formattedNumber: formattedNumber, message });
       
       return { success: true };
     } catch (error: any) {
       console.error(`Error sending message to ${to} (formatted: ${this.formatPhoneNumber(to)}):`, error);
+      
+      // If it's a detached frame error and we have retries left, try to reconnect
+      if (error.message.includes('detached Frame') && retries > 0) {
+        console.log(`Frame detached, attempting reconnection. Retries left: ${retries}`);
+        
+        try {
+          // Disconnect and reconnect
+          await this.disconnect();
+          await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+          
+          // Restart connection
+          this.isConnecting = true;
+          await this.connect();
+          
+          // Wait for connection to be established
+          let connectionAttempts = 0;
+          while (connectionAttempts < 15 && this.isConnecting) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            connectionAttempts++;
+          }
+          
+          if (this.client) {
+            // Retry sending the message
+            return await this.sendMessage(to, message, retries - 1, options);
+          } else {
+            return { success: false, error: 'Falha ao reconectar após erro de Frame' };
+          }
+        } catch (reconnectError: any) {
+          console.error('Reconnection failed:', reconnectError);
+          return { success: false, error: `Erro ao reconectar: ${reconnectError.message}` };
+        }
+      }
+      
       this.emit('messageError', { to, message, error: error.message });
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * Calculate realistic typing duration based on message length
+   * Simulates human typing speed: ~3-4 characters per second
+   */
+  private calculateTypingDuration(message: string): number {
+    const wordsPerMinute = 40; // Average typing speed
+    const charactersPerSecond = (wordsPerMinute * 5) / 60; // ~3.33 chars/sec
+    const baseDuration = (message.length / charactersPerSecond) * 1000;
+    
+    // Add some randomness (±20%) and ensure minimum/maximum duration
+    const randomFactor = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+    const duration = baseDuration * randomFactor;
+    
+    // Ensure duration is between 2 and 8 seconds for realistic feel
+    return Math.max(2000, Math.min(8000, Math.floor(duration)));
+  }
+
+  /**
+   * Send message with custom typing settings
+   */
+  async sendMessageWithTyping(to: string, message: string, typingDuration?: number): Promise<{ success: boolean; error?: string }> {
+    return this.sendMessage(to, message, 2, { 
+      showTyping: true, 
+      typingDuration 
+    });
   }
 
   private formatPhoneNumber(phone: string): string {

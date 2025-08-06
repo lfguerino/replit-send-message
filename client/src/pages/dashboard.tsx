@@ -6,12 +6,13 @@ import { CampaignProgress } from "@/components/campaign-progress";
 import { ActivityLog } from "@/components/activity-log";
 import { StatsGrid } from "@/components/stats-grid";
 import { ContactsTable } from "@/components/contacts-table";
+import { UserProfile } from "@/components/user-profile";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MessageSquare, Plus, Home, Plug, Megaphone, Users, BarChart, LogOut, User } from "lucide-react";
+import { MessageSquare, Plus, Home, Plug, Megaphone, Users, BarChart, LogOut, User, Settings } from "lucide-react";
 
 export default function Dashboard() {
   const { isConnected, whatsappStatus } = useWebSocket();
@@ -106,6 +107,18 @@ export default function Dashboard() {
               <BarChart className="w-4 h-4 mr-3" />
               Relatórios
             </button>
+            <button 
+              onClick={() => setActiveSection('profile')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                activeSection === 'profile' 
+                  ? 'text-whatsapp bg-green-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="button-nav-profile"
+            >
+              <Settings className="w-4 h-4 mr-3" />
+              Perfil
+            </button>
           </div>
         </nav>
       </div>
@@ -123,6 +136,7 @@ export default function Dashboard() {
                   {activeSection === 'campaigns' && 'Campanhas'}
                   {activeSection === 'contacts' && 'Contatos'}
                   {activeSection === 'reports' && 'Relatórios'}
+                  {activeSection === 'profile' && 'Perfil do Usuário'}
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
                   {activeSection === 'dashboard' && 'Gerencie suas campanhas do WhatsApp'}
@@ -130,6 +144,7 @@ export default function Dashboard() {
                   {activeSection === 'campaigns' && 'Crie e gerencie campanhas de mensagens'}
                   {activeSection === 'contacts' && 'Visualize todos os contatos importados'}
                   {activeSection === 'reports' && 'Estatísticas e relatórios de atividade'}
+                  {activeSection === 'profile' && 'Altere suas informações pessoais e senha'}
                 </p>
               </div>
               <div className="flex items-center space-x-4">
@@ -162,6 +177,10 @@ export default function Dashboard() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setActiveSection('profile')}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Perfil
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => logout()}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Sair
@@ -228,6 +247,12 @@ export default function Dashboard() {
             <div className="space-y-6">
               <StatsGrid stats={stats} />
               <ActivityLog />
+            </div>
+          )}
+
+          {activeSection === 'profile' && (
+            <div className="space-y-6">
+              <UserProfile />
             </div>
           )}
         </main>
