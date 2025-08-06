@@ -235,6 +235,41 @@ export class SQLiteStorage implements IStorage {
     await db.delete(schema.activityLogs);
   }
 
+  // Webhook Logs
+  async createWebhookLog(logData: any) {
+    const id = crypto.randomUUID();
+    const log = {
+      id,
+      ...logData,
+      headers: typeof logData.headers === 'string' ? logData.headers : JSON.stringify(logData.headers),
+      requestBody: typeof logData.requestBody === 'string' ? logData.requestBody : JSON.stringify(logData.requestBody),
+      createdAt: new Date().toISOString(),
+    };
+    
+    await db.insert(schema.webhookLogs).values(log);
+    return {
+      ...log,
+      headers: log.headers ? JSON.parse(log.headers) : null,
+      requestBody: log.requestBody ? JSON.parse(log.requestBody) : null,
+    };
+  }
+
+  async getWebhookLogs(limit = 50) {
+    const results = await db.select()
+      .from(schema.webhookLogs)
+      .limit(limit);
+    
+    return results.map(log => ({
+      ...log,
+      headers: log.headers ? JSON.parse(log.headers) : null,
+      requestBody: log.requestBody ? JSON.parse(log.requestBody) : null,
+    }));
+  }
+
+  async clearWebhookLogs(): Promise<void> {
+    await db.delete(schema.webhookLogs);
+  }
+
   async getAllWhatsappSessions() {
     return await db.select().from(schema.whatsappSessions);
   }

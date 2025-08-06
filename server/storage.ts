@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type WhatsappSession, type InsertWhatsappSession, type Campaign, type InsertCampaign, type Contact, type InsertContact, type ActivityLog, type InsertActivityLog } from "@shared/schema";
+import { type User, type InsertUser, type WhatsappSession, type InsertWhatsappSession, type Campaign, type InsertCampaign, type Contact, type InsertContact, type ActivityLog, type InsertActivityLog, type WebhookLog, type InsertWebhookLog } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -38,6 +38,11 @@ export interface IStorage {
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
   getActivityLogs(limit?: number): Promise<ActivityLog[]>;
   clearActivityLogs(): Promise<void>;
+
+  // Webhook Logs
+  createWebhookLog(log: InsertWebhookLog): Promise<WebhookLog>;
+  getWebhookLogs(limit?: number): Promise<WebhookLog[]>;
+  clearWebhookLogs(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -46,6 +51,7 @@ export class MemStorage implements IStorage {
   private campaigns: Map<string, Campaign>;
   private contacts: Map<string, Contact>;
   private activityLogs: ActivityLog[];
+  private webhookLogs: WebhookLog[];
 
   constructor() {
     this.users = new Map();
@@ -53,6 +59,7 @@ export class MemStorage implements IStorage {
     this.campaigns = new Map();
     this.contacts = new Map();
     this.activityLogs = [];
+    this.webhookLogs = [];
   }
 
   // Users
@@ -69,6 +76,7 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
+      email: insertUser.email ?? null,
       isActive: insertUser.isActive ?? true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -128,9 +136,10 @@ export class MemStorage implements IStorage {
     const campaign: Campaign = {
       ...insertCampaign,
       id,
+      messageBlocks: insertCampaign.messageBlocks ?? null,
       status: insertCampaign.status || 'draft',
       messageInterval: insertCampaign.messageInterval || 3,
-      scheduledAt: insertCampaign.scheduledAt || null,
+      scheduledAt: insertCampaign.scheduledAt ?? null,
       totalContacts: 0,
       sentCount: 0,
       deliveredCount: 0,
@@ -207,7 +216,8 @@ export class MemStorage implements IStorage {
   }
 
   async deleteContactsByCampaign(campaignId: string): Promise<void> {
-    for (const [id, contact] of this.contacts.entries()) {
+    const entries = Array.from(this.contacts.entries());
+    for (const [id, contact] of entries) {
       if (contact.campaignId === campaignId) {
         this.contacts.delete(id);
       }
@@ -252,6 +262,37 @@ export class MemStorage implements IStorage {
 
   async clearActivityLogs(): Promise<void> {
     this.activityLogs = [];
+  }
+
+  // Webhook Logs
+  async createWebhookLog(insertLog: InsertWebhookLog): Promise<WebhookLog> {
+    const id = randomUUID();
+    const log: WebhookLog = {
+      ...insertLog,
+      id,
+      headers: insertLog.headers ?? null,
+      ipAddress: insertLog.ipAddress ?? null,
+      userAgent: insertLog.userAgent ?? null,
+      statusCode: insertLog.statusCode ?? 200,
+      responseTime: insertLog.responseTime ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    this.webhookLogs.unshift(log); // Add to beginning for newest first
+    
+    // Keep only last 1000 webhook logs
+    if (this.webhookLogs.length > 1000) {
+      this.webhookLogs = this.webhookLogs.slice(0, 1000);
+    }
+    
+    return log;
+  }
+
+  async getWebhookLogs(limit: number = 50): Promise<WebhookLog[]> {
+    return this.webhookLogs.slice(0, limit);
+  }
+
+  async clearWebhookLogs(): Promise<void> {
+    this.webhookLogs = [];
   }
 }
 

@@ -1,3 +1,6 @@
 2025/08/06-14:39:51.483 7ff Reusing MANIFEST /home/runner/workspace/tokens/session_001/Default/Local Storage/leveldb/MANIFEST-000001
 2025/08/06-14:39:51.485 7ff Recovering log #8
 2025/08/06-14:39:51.486 7ff Reusing old log /home/runner/workspace/tokens/session_001/Default/Local Storage/leveldb/000008.log 
+2025/08/06-15:17:51.657 7ff Level-0 table #11: started
+2025/08/06-15:17:51.701 7ff Level-0 table #11: 16825 bytes OK
+2025/08/06-15:17:51.706 7ff Delete type=0 #8

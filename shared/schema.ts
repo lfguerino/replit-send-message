@@ -61,6 +61,20 @@ export const activityLogs = sqliteTable("activity_logs", {
   createdAt: text("created_at").$default(() => new Date().toISOString()),
 });
 
+// Webhook logs table for tracking incoming webhook requests
+export const webhookLogs = sqliteTable("webhook_logs", {
+  id: text("id").primaryKey().$default(() => crypto.randomUUID()),
+  endpoint: text("endpoint").notNull(), // /api/webhook/contact_finished, /api/webhook/email_sent
+  method: text("method").notNull().default("POST"),
+  requestBody: text("request_body"), // JSON string of the request body
+  headers: text("headers"), // JSON string of relevant headers
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  statusCode: integer("status_code").default(200),
+  responseTime: integer("response_time"), // milliseconds
+  createdAt: text("created_at").$default(() => new Date().toISOString()),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -94,6 +108,11 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
   createdAt: true,
 });
 
+export const insertWebhookLogSchema = createInsertSchema(webhookLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -109,3 +128,6 @@ export type InsertContact = z.infer<typeof insertContactSchema>;
 
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+export type WebhookLog = typeof webhookLogs.$inferSelect;
+export type InsertWebhookLog = z.infer<typeof insertWebhookLogSchema>;

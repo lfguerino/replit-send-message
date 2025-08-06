@@ -7,12 +7,13 @@ import { ActivityLog } from "@/components/activity-log";
 import { StatsGrid } from "@/components/stats-grid";
 import { ContactsTable } from "@/components/contacts-table";
 import { UserProfile } from "@/components/user-profile";
+import { WebhookLogs } from "@/pages/webhook-logs-simple";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MessageSquare, Plus, Home, Plug, Megaphone, Users, BarChart, LogOut, User, Settings } from "lucide-react";
+import { MessageSquare, Plus, Home, Plug, Megaphone, Users, BarChart, LogOut, User, Settings, Webhook } from "lucide-react";
 
 export default function Dashboard() {
   const { isConnected, whatsappStatus } = useWebSocket();
@@ -108,6 +109,18 @@ export default function Dashboard() {
               Relatórios
             </button>
             <button 
+              onClick={() => setActiveSection('webhook-logs')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                activeSection === 'webhook-logs' 
+                  ? 'text-whatsapp bg-green-50' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              data-testid="button-nav-webhooks"
+            >
+              <Webhook className="w-4 h-4 mr-3" />
+              Webhook Logs
+            </button>
+            <button 
               onClick={() => setActiveSection('profile')}
               className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
                 activeSection === 'profile' 
@@ -136,6 +149,7 @@ export default function Dashboard() {
                   {activeSection === 'campaigns' && 'Campanhas'}
                   {activeSection === 'contacts' && 'Contatos'}
                   {activeSection === 'reports' && 'Relatórios'}
+                  {activeSection === 'webhook-logs' && 'Webhook Logs'}
                   {activeSection === 'profile' && 'Perfil do Usuário'}
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
@@ -247,6 +261,12 @@ export default function Dashboard() {
             <div className="space-y-6">
               <StatsGrid stats={stats} />
               <ActivityLog />
+            </div>
+          )}
+
+          {activeSection === 'webhook-logs' && (
+            <div className="space-y-6">
+              <WebhookLogs />
             </div>
           )}
 

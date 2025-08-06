@@ -13,3 +13,12 @@
 2025/08/06-14:39:55.201 7ff compacted to: files[ 0 0 1 0 0 0 0 ]
 2025/08/06-14:39:55.210 7ff Delete type=2 #451
 2025/08/06-14:39:55.211 7ff Delete type=2 #454
+2025/08/06-15:20:02.696 800 Level-0 table #457: started
+2025/08/06-15:20:02.768 800 Level-0 table #457: 1226604 bytes OK
+2025/08/06-15:20:02.781 800 Delete type=0 #453
+2025/08/06-15:21:17.971 7ff Compacting 1@1 + 1@2 files
+2025/08/06-15:21:18.173 7ff Generated table #458@1: 44666 keys, 1826567 bytes
+2025/08/06-15:21:18.173 7ff Compacted 1@1 + 1@2 files => 1826567 bytes
+2025/08/06-15:21:18.185 7ff compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/08/06-15:21:18.185 7ff Delete type=2 #455
+2025/08/06-15:21:18.185 7ff Delete type=2 #457

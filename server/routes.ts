@@ -5,7 +5,7 @@ import multer from "multer";
 import { storage } from "./storage";
 import { whatsappService } from "./services/whatsapp";
 import { ExcelService } from "./services/excel";
-import { insertCampaignSchema, insertContactSchema, insertActivityLogSchema, insertUserSchema } from "@shared/schema";
+import { insertCampaignSchema, insertContactSchema, insertActivityLogSchema, insertUserSchema, insertWebhookLogSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import session from "express-session";
 import bcrypt from "bcryptjs";
@@ -831,6 +831,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   whatsappService.on('status', (data) => {
     broadcast({ type: 'whatsapp_status', data });
+  });
+
+  // Webhook routes
+  const logWebhookRequest = async (req: AuthRequest, endpoint: string, startTime: number, statusCode: number = 200) => {
+    const responseTime = Date.now() - startTime;
+    const headers = JSON.stringify({
+      'user-agent': req.headers['user-agent'],
+      'content-type': req.headers['content-type'],
+      'content-length': req.headers['content-length'],
+    });
+
+    await storage.createWebhookLog({
+      endpoint,
+      method: 'POST',
+      requestBody: JSON.stringify(req.body),
+      headers,
+      ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
+      userAgent: req.headers['user-agent'] || null,
+      statusCode,
+      responseTime,
+    });
+  };
+
+  app.post("/api/webhook/contact_finished", async (req: AuthRequest, res) => {
+    const startTime = Date.now();
+    try {
+      console.log("📞 Webhook contact_finished received:", req.body);
+      
+      await logWebhookRequest(req, "/api/webhook/contact_finished", startTime, 200);
+      
+      // Broadcast to connected WebSocket clients
+      broadcast({
+        type: 'webhook_received',
+        data: {
+          endpoint: 'contact_finished',
+          body: req.body,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      res.status(200).json({ message: "Webhook contact_finished processed successfully" });
+    } catch (error: any) {
+      console.error("Error processing contact_finished webhook:", error);
+      await logWebhookRequest(req, "/api/webhook/contact_finished", startTime, 500);
+      res.status(500).json({ message: "Error processing webhook", error: error.message });
+    }
+  });
+
+  app.post("/api/webhook/email_sent", async (req: AuthRequest, res) => {
+    const startTime = Date.now();
+    try {
+      console.log("📧 Webhook email_sent received:", req.body);
+      
+      await logWebhookRequest(req, "/api/webhook/email_sent", startTime, 200);
+      
+      // Broadcast to connected WebSocket clients
+      broadcast({
+        type: 'webhook_received',
+        data: {
+          endpoint: 'email_sent',
+          body: req.body,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      res.status(200).json({ message: "Webhook email_sent processed successfully" });
+    } catch (error: any) {
+      console.error("Error processing email_sent webhook:", error);
+      await logWebhookRequest(req, "/api/webhook/email_sent", startTime, 500);
+      res.status(500).json({ message: "Error processing webhook", error: error.message });
+    }
+  });
+
+  // API route to get webhook logs
+  app.get("/api/webhook-logs", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getWebhookLogs(limit);
+      res.json(logs);
+    } catch (error: any) {
+      console.error("Error getting webhook logs:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // API route to clear webhook logs
+  app.delete("/api/webhook-logs", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      await storage.clearWebhookLogs();
+      res.json({ message: "Webhook logs cleared successfully" });
+    } catch (error: any) {
+      console.error("Error clearing webhook logs:", error);
+      res.status(500).json({ message: error.message });
+    }
   });
 
   return httpServer;

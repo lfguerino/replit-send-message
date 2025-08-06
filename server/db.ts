@@ -65,5 +65,18 @@ export function initializeDatabase() {
       metadata TEXT,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS webhook_logs (
+      id TEXT PRIMARY KEY,
+      endpoint TEXT NOT NULL,
+      method TEXT NOT NULL DEFAULT 'POST',
+      request_body TEXT,
+      headers TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      status_code INTEGER DEFAULT 200,
+      response_time INTEGER,
+      created_at TEXT NOT NULL
+    );
   `);
 }

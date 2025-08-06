@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
+import { WebhookLogs } from "@/pages/webhook-logs";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,6 +36,7 @@ function Router() {
       {isAuthenticated ? (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/webhook-logs" component={WebhookLogs} />
           <Route path="/login" component={() => { window.location.href = "/"; return null; }} />
         </>
       ) : (
