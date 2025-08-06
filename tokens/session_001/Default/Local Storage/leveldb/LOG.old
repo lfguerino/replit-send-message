@@ -1,3 +1,5 @@
-2025/08/06-13:27:48.554 1315 Reusing MANIFEST /home/runner/workspace/tokens/session_001/Default/Local Storage/leveldb/MANIFEST-000001
-2025/08/06-13:27:48.676 1315 Recovering log #4
-2025/08/06-13:27:48.680 1315 Reusing old log /home/runner/workspace/tokens/session_001/Default/Local Storage/leveldb/000004.log 
+2025/08/06-14:33:29.210 5c4 Reusing MANIFEST /home/runner/workspace/tokens/session_001/Default/Local Storage/leveldb/MANIFEST-000001
+2025/08/06-14:33:29.390 5c4 Recovering log #8
+2025/08/06-14:33:29.394 5c4 Reusing old log /home/runner/workspace/tokens/session_001/Default/Local Storage/leveldb/000008.log 
+2025/08/06-14:33:29.419 5c4 Delete type=0 #4
+2025/08/06-14:33:29.429 5c4 Delete type=0 #7

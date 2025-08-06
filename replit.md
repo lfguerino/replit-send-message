@@ -11,6 +11,7 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes (August 2025)
 
 - **Migration Complete**: Successfully migrated project from Replit Agent to Replit environment
+- **showTyping Bug Fix**: Fixed showTyping field validation error when saving campaign drafts (proper string to boolean conversion in backend API)
 - **Login Security Overhaul**: Completely refactored login screen with professional dark theme design
 - **Authentication Restrictions**: Removed user registration and first-access functionality for security
 - **Strong Password Implementation**: Updated default password to "CampaignManager2024Pro" (strong, no special chars)

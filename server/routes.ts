@@ -390,10 +390,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/campaigns", requireAuth, upload.single('contactsFile'), async (req: AuthRequest, res) => {
     try {
-      // Convert messageInterval to number before validation
+      // Convert messageInterval to number and showTyping to boolean before validation
       const processedBody = {
         ...req.body,
-        messageInterval: parseInt(req.body.messageInterval) || 5
+        messageInterval: parseInt(req.body.messageInterval) || 5,
+        showTyping: req.body.showTyping === 'true' ? true : (req.body.showTyping === 'false' ? false : Boolean(req.body.showTyping))
       };
       
       const validation = insertCampaignSchema.safeParse(processedBody);
@@ -650,7 +651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let message = replaceVariables(campaign.message);
 
         // Send message with typing indicator (based on campaign settings)
-        const result = await whatsappService.sendMessage(contact.phone, message, 2, { showTyping: campaign.showTyping });
+        const result = await whatsappService.sendMessage(contact.phone, message, 2, { showTyping: campaign.showTyping ?? true });
 
         if (result.success) {
           await storage.updateContact(contact.id, {
@@ -690,7 +691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     // Process template variables in block message
                     const blockMessage = replaceVariables(block);
                     
-                    const blockResult = await whatsappService.sendMessage(contact.phone, blockMessage, 2, { showTyping: campaign.showTyping });
+                    const blockResult = await whatsappService.sendMessage(contact.phone, blockMessage, 2, { showTyping: campaign.showTyping ?? true });
                     
                     if (blockResult.success) {
                       await storage.createActivityLog({
