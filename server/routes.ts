@@ -904,6 +904,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+    app.post("/api/webhook/contact_called", async (req: AuthRequest, res) => {
+    const startTime = Date.now();
+    try {
+      console.log("📞 Webhook contact_called received:", req.body);
+      
+      await logWebhookRequest(req, "/api/webhook/contact_called", startTime, 200);
+      
+      // Broadcast to connected WebSocket clients
+      broadcast({
+        type: 'webhook_received',
+        data: {
+          endpoint: 'contact_called',
+          body: req.body,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      res.status(200).json({ message: "Webhook contact_called processed successfully" });
+    } catch (error: any) {
+      console.error("Error processing contact_called webhook:", error);
+      await logWebhookRequest(req, "/api/webhook/contact_called", startTime, 500);
+      res.status(500).json({ message: "Error processing webhook", error: error.message });
+    }
+  });
+
   // API route to get webhook logs
   app.get("/api/webhook-logs", requireAuth, async (req: AuthRequest, res) => {
     try {
